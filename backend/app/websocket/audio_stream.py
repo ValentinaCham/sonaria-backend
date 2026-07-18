@@ -1,36 +1,28 @@
 """
 audio_stream.py
 ───────────────
-WebSocket /ws/audio — Reconocimiento de voz en tiempo real con diarización.
+WebSocket /ws/audio — Reconocimiento de voz en tiempo real con diarización,
+limpieza de ruido y análisis/clasificación de voz (diagrama de voz).
 
 Protocolo cliente ↔ servidor:
 
   CONEXIÓN:
-    ws://host/ws/audio?token=<JWT>&max_speakers=<N>&sample_rate=<Hz>
-
-    Parámetros query (todos opcionales):
-      token        JWT de autenticación (alternativa a header Authorization)
-      max_speakers Número máximo de hablantes esperados (default: 5)
-      sample_rate  Hz del audio enviado (default: 16000)
+    ws://host/ws/audio?token=<JWT>&max_speakers=<N>&sample_rate=<Hz>&clean=<bool>&analyze=<bool>
 
   CLIENTE → SERVIDOR:
     Bytes crudos: audio PCM 16kHz mono int16 (sin cabecera WAV)
     ─ o ─
     JSON de control: { "action": "ping" }
 
-  SERVIDOR → CLIENTE:
-    JSON con transcripciones:
-    {
-      "type": "connected" | "partial" | "final" | "revision" | "error" | "pong",
-      "speaker": "Persona 1",       # etiqueta amigable
-      "speaker_label": "A",         # etiqueta cruda AssemblyAI
-      "text": "...",
-      "is_final": true,
-      "segments": [                 # en "final" y "revision"
-        { "speaker": "...", "speaker_label": "...", "text": "..." }
-      ],
-      "timestamp_ms": 1234567890
-    }
+  SERVIDOR → CLIENTE (JSON):
+    - Transcripción por turno:
+      { "type": "partial"|"final"|"revision", "turn_order": N,
+        "speaker": "Persona 1", "speaker_label": "A", "text": "...",
+        "segments": [ { "speaker", "speaker_label", "text" } ], "is_final": bool }
+    - Análisis de voz (diagrama):
+      { "type": "voice_analysis", "mel": [...], "pitch_hz", "centroid_hz",
+        "rms", "is_speech", "voice_id", "voice_name", "confidence", "is_new_voice" }
+    - Otros: "connected", "error", "pong".
 """
 
 import asyncio
@@ -48,15 +40,12 @@ from app.repositories.voice_repository import VoiceRepository
 from app.security.jwt import decode_access_token
 from app.services.ai.assemblyai_service import AssemblyAIStreamingService
 from app.services.audio.speech_enhancer import SpeechEnhancer
+from app.services.audio.voice_features import VoiceAnalyzer
 from app.services.conversation_service import ConversationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-
-# ──────────────────────────────────────────────────────────────
-# Endpoint WebSocket
-# ──────────────────────────────────────────────────────────────
 
 @router.websocket("/ws/audio")
 async def audio_stream(
@@ -66,13 +55,9 @@ async def audio_stream(
     max_speakers: int = Query(default=5, ge=1, le=10, description="Máximo de hablantes"),
     sample_rate: int = Query(default=16000, description="Sample rate del audio en Hz"),
     clean: bool | None = Query(default=None, description="Activar limpieza de ruido (por defecto según config)"),
+    analyze: bool | None = Query(default=None, description="Activar análisis/clasificación de voz (por defecto según config)"),
 ):
-    """
-    WebSocket de reconocimiento de voz multi-persona en tiempo real.
-
-    El cliente envía chunks de audio PCM y recibe transcripciones
-    con identificación de hablante en tiempo real.
-    """
+    """WebSocket de reconocimiento de voz multi-persona en tiempo real."""
     await websocket.accept()
     logger.info(
         "Nueva conexión WebSocket /ws/audio | max_speakers=%d | sample_rate=%d",
@@ -121,6 +106,17 @@ async def audio_stream(
             logger.warning("No se pudo iniciar la limpieza de audio: %s", exc)
             enhancer = None
 
+    # ── Análisis de voz (espectrograma + clasificación) ──
+    analysis_enabled = settings.ENABLE_VOICE_ANALYSIS if analyze is None else analyze
+    analyzer: VoiceAnalyzer | None = None
+    if analysis_enabled:
+        try:
+            analyzer = VoiceAnalyzer(sample_rate=sample_rate)
+            logger.info("Análisis de voz ACTIVADO (espectrograma+MFCC) para esta conexión")
+        except Exception as exc:
+            logger.warning("No se pudo iniciar el análisis de voz: %s", exc)
+            analyzer = None
+
     async def send_json_safe(data: dict):
         """Envía JSON al cliente, ignora si el WebSocket ya cerró."""
         try:
@@ -159,11 +155,9 @@ async def audio_stream(
             try:
                 message = await websocket.receive()
             except (WebSocketDisconnect, RuntimeError):
-                # RuntimeError: Starlette lanza esto si el cliente ya cerró.
                 logger.info("Cliente WebSocket desconectado")
                 break
 
-            # Mensaje de cierre enviado por el cliente.
             if message.get("type") == "websocket.disconnect":
                 logger.info("Cliente WebSocket desconectado")
                 break
@@ -194,8 +188,11 @@ async def audio_stream(
                 raw = message["bytes"]
                 # Análisis del "diagrama de voz" sobre el audio original (continuo).
                 if analyzer is not None:
-                    for ev in analyzer.feed(raw):
-                        await send_json_safe(ev)
+                    try:
+                        for ev in analyzer.feed(raw):
+                            await send_json_safe(ev)
+                    except Exception as exc:
+                        logger.warning("Fallo análisis de voz: %s", exc)
                 audio = raw
                 if enhancer is not None:
                     audio = enhancer.process_pcm(audio)
@@ -203,7 +200,6 @@ async def audio_stream(
                     svc.send_audio(audio)
 
     except RuntimeError as e:
-        # Error de configuración (API key faltante, SDK no instalado, etc.)
         logger.error("Error de configuración en /ws/audio: %s", e)
         await send_json_safe({
             "type": "error",

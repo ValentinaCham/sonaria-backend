@@ -1,4 +1,4 @@
-﻿import asyncio
+import asyncio
 import json
 import urllib.request
 
@@ -36,5 +36,6 @@ async def test():
                     break
     except Exception as e:
         print('Error: ' + str(e))
+
 
 asyncio.run(test())

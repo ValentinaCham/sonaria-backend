@@ -75,7 +75,7 @@
   .bubble .who { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
   .bubble .txt { font-size: 20px; line-height: 1.4; }
   .turn.partial .bubble { border-style: dashed; opacity: .85; }
-  .turn.partial .txt::after { content: "▌"; animation: blink 1s steps(1) infinite; color: var(--muted); }
+  .turn.partial .txt::after { content: "|"; animation: blink 1s steps(1) infinite; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
 
   .banner { background: rgba(255,93,108,.12); border: 1px solid var(--danger); color: #ffd3d8;
@@ -83,7 +83,6 @@
   .hint { color: var(--muted); font-size: 13px; margin-top: 14px; }
   footer { text-align:center; color: var(--muted); font-size: 12px; padding: 24px; }
 
-  /* Panel de diagrama de voz */
   .panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
   .panel-card h2 { margin: 0 0 12px; font-size: 15px; letter-spacing: .3px; }
   .viz-label { color: var(--muted); font-size: 12px; margin: 10px 0 6px; }
@@ -112,7 +111,7 @@
     <div class="logo">S</div>
     <div>
       <h1>SONARIA</h1>
-      <p>Detección, reconocimiento y diagrama de voz en tiempo real</p>
+      <p>Deteccion, reconocimiento y diagrama de voz en tiempo real</p>
     </div>
   </div>
   <div class="status">
@@ -125,17 +124,17 @@
   <div class="banner" id="banner"></div>
 
   <div class="controls">
-    <button class="btn-start" id="startBtn">🎙️ Empezar a escuchar</button>
-    <button class="btn-stop" id="stopBtn" disabled>⏹️ Detener</button>
+    <button class="btn-start" id="startBtn">Empezar a escuchar</button>
+    <button class="btn-stop" id="stopBtn" disabled>Detener</button>
     <div class="field">
-      <label for="maxSpeakers">Nº personas</label>
+      <label for="maxSpeakers">N personas</label>
       <input type="number" id="maxSpeakers" min="1" max="10" value="2" />
     </div>
     <label class="field" style="cursor:pointer" title="Quita el ruido ambiente antes de transcribir">
       <input type="checkbox" id="cleanChk" checked style="width:18px;height:18px" />
       Reducir ruido ambiente
     </label>
-    <div class="meter" title="Nivel de micrófono"><div id="level"></div></div>
+    <div class="meter" title="Nivel de microfono"><div id="level"></div></div>
   </div>
 
   <div class="layout">
@@ -144,12 +143,12 @@
 
       <div class="transcript" id="transcript">
         <div class="empty" id="empty">
-          Pulsa <b>“Empezar a escuchar”</b> y habla.<br />
-          Verás en vivo quién habla y qué dice. Toca a una persona para ponerle su nombre real.
+          Pulsa <b>"Empezar a escuchar"</b> y habla.<br />
+          Veras en vivo quien habla y que dice. Toca a una persona para ponerle su nombre real.
         </div>
       </div>
 
-      <p class="hint">Consejo: indica el número real de personas antes de empezar y hablen por turnos al inicio. Toca “Persona 1/2…” para reconocerla con su nombre (se recuerda).</p>
+      <p class="hint">Consejo: indica el numero real de personas antes de empezar y hablen por turnos al inicio. Toca "Persona 1/2..." para reconocerla con su nombre (se recuerda).</p>
     </section>
 
     <aside class="col-right">
@@ -157,24 +156,24 @@
         <h2>Diagrama de voz</h2>
         <div class="viz-label">Onda sonora (tiempo real)</div>
         <canvas id="wave" width="360" height="80"></canvas>
-        <div class="viz-label">Espectrograma · análisis Python (MEL)</div>
+        <div class="viz-label">Espectrograma - analisis Python (MEL)</div>
         <canvas id="spec" width="360" height="130"></canvas>
       </div>
 
       <div class="panel-card">
-        <h2>Clasificación de voz</h2>
+        <h2>Clasificacion de voz</h2>
         <div class="vc-head">
-          <div class="vc-avatar" id="vcAvatar">—</div>
+          <div class="vc-avatar" id="vcAvatar">-</div>
           <div>
-            <div class="vc-name" id="vcName">Esperando voz…</div>
-            <div class="vc-sub" id="vcSub">La voz se clasifica por su huella acústica</div>
+            <div class="vc-name" id="vcName">Esperando voz...</div>
+            <div class="vc-sub" id="vcSub">La voz se clasifica por su huella acustica</div>
           </div>
         </div>
         <div class="vc-conf"><div id="vcConf"></div></div>
         <div class="vc-metrics">
-          <div class="metric"><span>Tono (F0)</span><b id="vcPitch">— Hz</b></div>
-          <div class="metric"><span>Brillo</span><b id="vcBright">— Hz</b></div>
-          <div class="metric"><span>Confianza</span><b id="vcConfTxt">—</b></div>
+          <div class="metric"><span>Tono (F0)</span><b id="vcPitch">- Hz</b></div>
+          <div class="metric"><span>Brillo</span><b id="vcBright">- Hz</b></div>
+          <div class="metric"><span>Confianza</span><b id="vcConfTxt">-</b></div>
         </div>
         <div class="voices-list" id="voicesList"></div>
       </div>
@@ -182,32 +181,29 @@
   </div>
 </main>
 
-<footer>SONARIA · demo local · audio 16kHz PCM → AssemblyAI + análisis NumPy/SciPy</footer>
+<footer>SONARIA - demo local - audio 16kHz PCM -> AssemblyAI + analisis NumPy/SciPy</footer>
 
 <script>
-// ── Colores por hablante (diarización AssemblyAI) ──
 const SPEAKER_COLORS = { "A":"var(--p1)","B":"var(--p2)","C":"var(--p3)","D":"var(--p4)","E":"var(--p5)","F":"var(--p6)" };
 function colorFor(label) {
   if (!label) return "#64748b";
   return SPEAKER_COLORS[label.toUpperCase()] || "#64748b";
 }
 
-// ── Nombres de hablantes (persistente) ──
 const names = JSON.parse(localStorage.getItem("sonaria_names") || "{}");
 function saveNames() { localStorage.setItem("sonaria_names", JSON.stringify(names)); }
-function displayName(label, fallback) { return (label && names[label]) ? names[label] : (fallback || "Identificando…"); }
+function displayName(label, fallback) { return (label && names[label]) ? names[label] : (fallback || "Identificando..."); }
 function initials(str) {
   const s = (str || "?").trim();
   return s.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
 }
 function friendly(label) {
-  if (!label || label === "?") return "Identificando…";
+  if (!label || label === "?") return "Identificando...";
   const up = label.toUpperCase();
   if (up.length === 1 && up >= "A" && up <= "Z") return "Persona " + (up.charCodeAt(0) - 64);
   return "Persona " + label;
 }
 
-// ── DOM ──
 const dot = document.getElementById("dot");
 const statusText = document.getElementById("statusText");
 const banner = document.getElementById("banner");
@@ -232,14 +228,13 @@ const vcConfTxt = document.getElementById("vcConfTxt");
 const voicesList = document.getElementById("voicesList");
 
 const seenSpeakers = new Set();
-const turnStore = {};   // turnId -> { el }
+const turnStore = {};
 let liveCounter = 0;
 
 function setStatus(text, mode) { statusText.textContent = text; dot.className = "dot" + (mode ? " " + mode : ""); }
-function showError(msg) { banner.style.display = "block"; banner.textContent = "⚠️ " + msg; }
+function showError(msg) { banner.style.display = "block"; banner.textContent = "! " + msg; }
 function hideError() { banner.style.display = "none"; }
 
-// ── Chips de personas detectadas ──
 function renderSpeakerChips() {
   speakersEl.innerHTML = "";
   [...seenSpeakers].sort().forEach(label => {
@@ -248,12 +243,11 @@ function renderSpeakerChips() {
     chip.className = "chip";
     chip.dataset.chip = label;
     chip.title = "Toca para poner el nombre real";
-    chip.innerHTML = `
-      <span class="avatar" style="background:${colorFor(label)}">${initials(displayName(label, fallback))}</span>
-      <span>${displayName(label, fallback)}</span>
-      <small>✎</small>`;
+    chip.innerHTML =
+      '<span class="avatar" style="background:' + colorFor(label) + '">' + initials(displayName(label, fallback)) + '</span>' +
+      '<span>' + displayName(label, fallback) + '</span><small>edit</small>';
     chip.onclick = () => {
-      const name = prompt(`¿Cómo se llama "${fallback}"?`, names[label] || "");
+      const name = prompt('Como se llama "' + fallback + '"?', names[label] || "");
       if (name === null) return;
       const t = name.trim();
       if (t) names[label] = t; else delete names[label];
@@ -263,7 +257,7 @@ function renderSpeakerChips() {
   });
 }
 function refreshRenderedNames(label) {
-  document.querySelectorAll(`[data-label="${label}"] .who`).forEach(el => {
+  document.querySelectorAll('[data-label="' + label + '"] .who').forEach(el => {
     el.textContent = displayName(label, friendly(label));
   });
 }
@@ -272,10 +266,9 @@ function trackSpeaker(label) {
 }
 function setActiveSpeakers(labels) {
   document.querySelectorAll(".chip.speaking").forEach(c => c.classList.remove("speaking"));
-  labels.forEach(l => { const c = speakersEl.querySelector(`[data-chip="${l}"]`); if (c) c.classList.add("speaking"); });
+  labels.forEach(l => { const c = speakersEl.querySelector('[data-chip="' + l + '"]'); if (c) c.classList.add("speaking"); });
 }
 
-// ── Render por TURNO (upsert + corrección de hablante en vivo) ──
 function turnKey(turnOrder, isPartial) {
   if (turnOrder !== null && turnOrder !== undefined) return "t" + turnOrder;
   return isPartial ? "__live__" : null;
@@ -303,12 +296,10 @@ function renderTurn(turnOrder, segments, isPartial) {
     const row = document.createElement("div");
     row.className = "turn" + (isPartial ? " partial" : "");
     row.dataset.label = label;
-    row.innerHTML = `
-      <div class="avatar" style="background:${colorFor(label)}">${initials(displayName(label, fallback))}</div>
-      <div class="bubble">
-        <div class="who" style="color:${colorFor(label)}">${displayName(label, fallback)}</div>
-        <div class="txt"></div>
-      </div>`;
+    row.innerHTML =
+      '<div class="avatar" style="background:' + colorFor(label) + '">' + initials(displayName(label, fallback)) + '</div>' +
+      '<div class="bubble"><div class="who" style="color:' + colorFor(label) + '">' + displayName(label, fallback) + '</div>' +
+      '<div class="txt"></div></div>';
     row.querySelector(".txt").textContent = seg.text;
     entry.el.appendChild(row);
   });
@@ -321,13 +312,12 @@ function settleTurns() {
   setActiveSpeakers([]);
 }
 
-// ── Diagrama de voz: onda + espectrograma ──
 function heat(v) {
   v = Math.max(0, Math.min(1, v));
   const stops = [[10,15,40],[30,80,160],[30,180,140],[220,200,60],[240,80,60]];
   const t = v * (stops.length - 1), i = Math.floor(t), f = t - i;
   const a = stops[i], b = stops[Math.min(i + 1, stops.length - 1)];
-  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+  return "rgb(" + Math.round(a[0]+(b[0]-a[0])*f) + "," + Math.round(a[1]+(b[1]-a[1])*f) + "," + Math.round(a[2]+(b[2]-a[2])*f) + ")";
 }
 function drawWave(buf) {
   const w = waveCanvas.width, h = waveCanvas.height;
@@ -358,20 +348,19 @@ function clearViz() {
   waveCtx.fillStyle = "#0a0f1f"; waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
 }
 
-// ── Clasificación de voz (huella acústica calculada en Python) ──
 const VOICE_COLORS = ["#4f8cff","#22d3a6","#ffbf47","#ff6b6b","#c084fc","#38bdf8","#f472b6","#a3e635"];
 function voiceColor(id) { return VOICE_COLORS[id % VOICE_COLORS.length]; }
 const voiceNames = JSON.parse(localStorage.getItem("sonaria_voice_names") || "{}");
 function saveVoiceNames() { localStorage.setItem("sonaria_voice_names", JSON.stringify(voiceNames)); }
 function voiceDisplayName(id) { return voiceNames[id] || ("Voz " + (id + 1)); }
-const voicesMap = {}; // id -> count
+const voicesMap = {};
 function renderVoicesList(activeId) {
   voicesList.innerHTML = "";
   Object.keys(voicesMap).map(Number).sort((a, b) => a - b).forEach(id => {
     const el = document.createElement("div");
     el.className = "voice-item" + (id === activeId ? " active" : "");
-    el.innerHTML = `<span class="swatch" style="background:${voiceColor(id)}"></span>
-      <span class="vi-name">${voiceDisplayName(id)}</span><small>✎</small>`;
+    el.innerHTML = '<span class="swatch" style="background:' + voiceColor(id) + '"></span>' +
+      '<span class="vi-name">' + voiceDisplayName(id) + '</span><small>edit</small>';
     el.onclick = () => {
       const n = prompt("Nombre para " + voiceDisplayName(id) + ":", voiceNames[id] || "");
       if (n === null) return;
@@ -388,16 +377,15 @@ function updateClassification(msg) {
   vcAvatar.textContent = initials(voiceDisplayName(id));
   vcAvatar.style.background = voiceColor(id);
   vcName.textContent = voiceDisplayName(id);
-  vcSub.textContent = msg.is_new_voice ? "🆕 Nueva voz detectada" : "Voz reconocida por su huella";
+  vcSub.textContent = msg.is_new_voice ? "Nueva voz detectada" : "Voz reconocida por su huella";
   const conf = Math.round((msg.confidence || 0) * 100);
   vcConf.style.width = conf + "%";
   vcConfTxt.textContent = conf + "%";
-  vcPitch.textContent = (msg.pitch_hz ? Math.round(msg.pitch_hz) : "—") + " Hz";
-  vcBright.textContent = (msg.centroid_hz ? Math.round(msg.centroid_hz) : "—") + " Hz";
+  vcPitch.textContent = (msg.pitch_hz ? Math.round(msg.pitch_hz) : "-") + " Hz";
+  vcBright.textContent = (msg.centroid_hz ? Math.round(msg.centroid_hz) : "-") + " Hz";
   renderVoicesList(id);
 }
 
-// ── Audio + WebSocket ──
 let ws = null, audioCtx = null, source = null, processor = null, stream = null;
 
 async function getToken() {
@@ -421,7 +409,7 @@ function floatTo16kPCM(input, inRate) {
 async function start() {
   hideError();
   startBtn.disabled = true;
-  setStatus("Conectando…");
+  setStatus("Conectando...");
   clearViz();
   try {
     const token = await getToken();
@@ -431,7 +419,8 @@ async function start() {
     const maxSpeakers = Math.max(1, Math.min(10, parseInt(maxSpeakersInput.value || "2", 10)));
     const clean = document.getElementById("cleanChk").checked ? "true" : "false";
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    const url = `${proto}://${location.host}/ws/audio?token=${encodeURIComponent(token)}&max_speakers=${maxSpeakers}&sample_rate=16000&clean=${clean}&analyze=true`;
+    const url = proto + "://" + location.host + "/ws/audio?token=" + encodeURIComponent(token) +
+      "&max_speakers=" + maxSpeakers + "&sample_rate=16000&clean=" + clean + "&analyze=true";
     ws = new WebSocket(url);
     ws.binaryType = "arraybuffer";
 
@@ -454,7 +443,7 @@ async function start() {
     };
 
     ws.onmessage = (evt) => {
-      let msg; try { msg = JSON.parse(evt.data); } catch { return; }
+      let msg; try { msg = JSON.parse(evt.data); } catch (e) { return; }
       switch (msg.type) {
         case "connected": setStatus("Escuchando", "live"); break;
         case "partial": renderTurn(msg.turn_order, msg.segments, true); break;
@@ -471,7 +460,7 @@ async function start() {
       }
     };
 
-    ws.onerror = () => { showError("Error de conexión WebSocket"); setStatus("Error", "err"); };
+    ws.onerror = () => { showError("Error de conexion WebSocket"); setStatus("Error", "err"); };
     ws.onclose = () => { if (stopBtn.disabled === false) stop(); };
   } catch (err) {
     showError(err.message || String(err));
@@ -481,11 +470,11 @@ async function start() {
 }
 
 function stop() {
-  try { if (processor) processor.disconnect(); } catch {}
-  try { if (source) source.disconnect(); } catch {}
-  try { if (audioCtx) audioCtx.close(); } catch {}
-  try { if (stream) stream.getTracks().forEach(t => t.stop()); } catch {}
-  try { if (ws && ws.readyState <= 1) ws.close(); } catch {}
+  try { if (processor) processor.disconnect(); } catch (e) {}
+  try { if (source) source.disconnect(); } catch (e) {}
+  try { if (audioCtx) audioCtx.close(); } catch (e) {}
+  try { if (stream) stream.getTracks().forEach(t => t.stop()); } catch (e) {}
+  try { if (ws && ws.readyState <= 1) ws.close(); } catch (e) {}
   settleTurns();
   ws = null; audioCtx = null; source = null; processor = null; stream = null;
   levelEl.style.width = "0%";
