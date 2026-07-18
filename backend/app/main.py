@@ -1,18 +1,23 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
+import threading
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
-from app.routers import auth, conversations, events, sounds, upload, voices
+from app.routers import auth, conversations, events, sounds, upload, voices, enrollment
 from app.websocket import audio_stream, sound_stream
+from app.services.voice_biometrics import voice_biometrics
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
+    # Inicializar biometría en background (descarga modelo y audio de Supabase)
+    # Lo corremos en un thread para no bloquear el startup de FastAPI
+    threading.Thread(target=voice_biometrics.initialize, daemon=True).start()
     yield
 
 
@@ -34,6 +39,7 @@ app.include_router(upload.router)
 app.include_router(events.router)
 app.include_router(audio_stream.router)
 app.include_router(sound_stream.router)
+app.include_router(enrollment.router)
 
 
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
@@ -43,4 +49,3 @@ app.mount("/test", StaticFiles(directory="app/static", html=True), name="test")
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-
