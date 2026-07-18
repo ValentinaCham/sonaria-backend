@@ -40,7 +40,6 @@
             align-self: flex-start;
         }
 
-        /* Lógica para diferenciar tamaños (prioridad) */
         .bubble.active {
             font-size: 1.25em;
             width: 100%;
@@ -54,6 +53,7 @@
         }
         
         .bubble strong { display: block; font-size: 0.75em; margin-bottom: 4px; text-transform: uppercase; opacity: 0.8; }
+        .bubble .revised-badge { font-size: 0.7em; color: #ef4444; margin-left: 10px; display: none; }
         
         #status { font-size: 14px; margin-bottom: 15px; color: #6b7280; }
         #speaker-count { font-weight: bold; color: #111827; }
@@ -87,59 +87,84 @@
 
         let knownSpeakers = new Set();
         let lastSpeaker = null;
+        let currentPartialId = null;
 
-        function addOrUpdateBubble(speaker, text, isFinal) {
-            // Actualizar conteo de personas
+        function updateSpeakerCount(speaker) {
             if (speaker !== 'UNKNOWN' && !knownSpeakers.has(speaker)) {
                 knownSpeakers.add(speaker);
                 speakerCountSpan.textContent = knownSpeakers.size;
             }
+        }
 
-            let bubbleId = 'bubble-' + speaker;
+        function createOrGetBubble(bubbleId, speaker) {
             let bubble = document.getElementById(bubbleId);
-            
             if (!bubble) {
                 bubble = document.createElement('div');
                 bubble.id = bubbleId;
                 bubble.className = 'bubble speaker-' + speaker;
                 
                 let speakerName = speaker === 'UNKNOWN' ? 'Identificando...' : 'Persona ' + speaker;
-                bubble.innerHTML = `<strong>${speakerName}</strong><span class="text"></span>`;
+                bubble.innerHTML = `<strong><span class="name">${speakerName}</span><span class="revised-badge">(Corregido por IA)</span></strong><span class="text"></span>`;
                 transcriptDiv.appendChild(bubble);
+            }
+            return bubble;
+        }
+
+        function updateBubble(turnOrder, speaker, text, isFinal, isRevision) {
+            updateSpeakerCount(speaker);
+            
+            // Usamos un id que mezcla si es final o no. Si no es final, actualizamos la misma burbuja temporal
+            const bubbleId = isFinal ? `bubble-final-${turnOrder}` : 'bubble-partial';
+            
+            let bubble = createOrGetBubble(bubbleId, speaker);
+            
+            // Si es parcial, actualizamos el speaker dinámicamente si cambia
+            if (!isFinal) {
+                bubble.className = 'bubble active speaker-' + speaker;
+                let speakerName = speaker === 'UNKNOWN' ? 'Identificando...' : 'Persona ' + speaker;
+                bubble.querySelector('.name').textContent = speakerName;
             }
             
             bubble.querySelector('.text').textContent = text;
             
-            // Lógica de Prioridad: El que acaba de hablar se hace grande, los demás se hacen pequeños
-            if (speaker !== lastSpeaker && speaker !== 'UNKNOWN') {
-                // Marcar todos como inactivos
-                document.querySelectorAll('.bubble').forEach(b => {
-                    b.classList.remove('active');
-                    b.classList.add('inactive');
-                });
-                
-                // Marcar el actual como activo
-                bubble.classList.remove('inactive');
-                bubble.classList.add('active');
-                lastSpeaker = speaker;
-            } else if (speaker === lastSpeaker) {
-                 bubble.classList.remove('inactive');
-                 bubble.classList.add('active');
+            if (isRevision) {
+                // Si la IA corrigió este turno en el pasado
+                bubble.className = 'bubble inactive speaker-' + speaker;
+                let speakerName = speaker === 'UNKNOWN' ? 'Identificando...' : 'Persona ' + speaker;
+                bubble.querySelector('.name').textContent = speakerName;
+                bubble.querySelector('.revised-badge').style.display = 'inline';
+            } else if (!isRevision && speaker !== 'UNKNOWN') {
+                // Lógica de prioridad para lo nuevo
+                if (speaker !== lastSpeaker) {
+                    document.querySelectorAll('.bubble').forEach(b => {
+                        b.classList.remove('active');
+                        b.classList.add('inactive');
+                    });
+                    bubble.classList.remove('inactive');
+                    bubble.classList.add('active');
+                    lastSpeaker = speaker;
+                } else if (speaker === lastSpeaker) {
+                     bubble.classList.remove('inactive');
+                     bubble.classList.add('active');
+                }
             }
             
-            // Si es el final de la frase, le quitamos el ID para que el próximo turno de esta persona cree una burbuja nueva
-            if (isFinal) {
-                bubble.removeAttribute('id');
-                // No cambiamos el 'lastSpeaker' para que si vuelve a hablar, siga siendo el grande.
+            if (isFinal && !isRevision) {
+                // Limpiar la burbuja parcial si se acaba de consolidar un final
+                let partialBubble = document.getElementById('bubble-partial');
+                if (partialBubble) {
+                    partialBubble.querySelector('.text').textContent = '';
+                    partialBubble.style.display = 'none';
+                }
+            } else if (!isFinal) {
+                bubble.style.display = 'block';
             }
             
-            // Auto-scroll
             transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
         }
 
         btnStart.onclick = async () => {
             try {
-                // Configurar WebSocket
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = `${protocol}//${window.location.host}/ws/audio`;
                 
@@ -153,8 +178,13 @@
                 
                 ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-                    if (data.text) {
-                        addOrUpdateBubble(data.speaker, data.text, data.is_final);
+                    
+                    if (data.type === 'turn') {
+                        updateBubble(data.turn_order, data.speaker, data.text, data.is_final, false);
+                    } else if (data.type === 'revision') {
+                        data.revisions.forEach(rev => {
+                            updateBubble(rev.turn_order, rev.speaker, rev.text, true, true);
+                        });
                     }
                 };
 
@@ -163,10 +193,8 @@
                     statusDiv.textContent = 'Estado: Error de conexión';
                 };
 
-                // Configurar Micrófono
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 
-                // Forzar 16kHz
                 audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
                 audioInput = audioContext.createMediaStreamSource(stream);
                 
@@ -175,7 +203,6 @@
                 scriptProcessor.onaudioprocess = (e) => {
                     if (ws.readyState === WebSocket.OPEN) {
                         const inputData = e.inputBuffer.getChannelData(0);
-                        // Convertir Float32 (-1 a 1) a Int16 (-32768 a 32767)
                         const pcm16 = new Int16Array(inputData.length);
                         for (let i = 0; i < inputData.length; i++) {
                             pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 32767;
