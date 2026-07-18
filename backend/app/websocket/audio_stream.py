@@ -28,6 +28,8 @@ Protocolo cliente ↔ servidor:
 import asyncio
 import json
 import logging
+import queue
+import threading
 import uuid
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
