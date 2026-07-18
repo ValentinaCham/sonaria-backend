@@ -1,8 +1,10 @@
 from pydantic import BaseModel
 
+from app.models.registered_sound import SoundCategory
+
 
 class SoundConfigRequest(BaseModel):
-    category: str
+    category: SoundCategory
     custom_name: str | None = None
     is_active: bool = True
     notification_preference: dict | None = None

@@ -5,15 +5,15 @@ from unittest.mock import MagicMock, patch
 
 class TestStartConversation:
     def test_start_conversation_success(self, client):
-        mock_conv_repo = MagicMock()
-        fake_conv = MagicMock()
-        fake_conv.id = uuid.uuid4()
-        fake_conv.started_at = datetime.now(timezone.utc)
-        mock_conv_repo.create.return_value = fake_conv
+        mock_svc = MagicMock()
+        fake_conv = {
+            "id": str(uuid.uuid4()),
+            "started_at": datetime.now(timezone.utc),
+        }
+        mock_svc.start.return_value = fake_conv
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
             response = client.post("/conversations/start")
 
@@ -25,19 +25,17 @@ class TestStartConversation:
 
 class TestEndConversation:
     def test_end_conversation_success(self, client):
-        mock_conv_repo = MagicMock()
-        fake_conv = MagicMock()
-        fake_conv.id = uuid.uuid4()
-        fake_conv.ended_at = datetime.now(timezone.utc)
-        mock_conv_repo.end.return_value = fake_conv
+        mock_svc = MagicMock()
+        fake_conv = {
+            "id": str(uuid.uuid4()),
+            "ended_at": datetime.now(timezone.utc),
+        }
+        mock_svc.end.return_value = fake_conv
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
-            response = client.post(
-                f"/conversations/{fake_conv.id}/end"
-            )
+            response = client.post(f"/conversations/{uuid.uuid4()}/end")
 
         assert response.status_code == 200
         data = response.json()
@@ -45,16 +43,13 @@ class TestEndConversation:
         assert "ended_at" in data
 
     def test_end_conversation_not_found(self, client):
-        mock_conv_repo = MagicMock()
-        mock_conv_repo.end.return_value = None
+        mock_svc = MagicMock()
+        mock_svc.end.return_value = None
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
-            response = client.post(
-                f"/conversations/{uuid.uuid4()}/end"
-            )
+            response = client.post(f"/conversations/{uuid.uuid4()}/end")
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Conversation not found"
@@ -62,15 +57,17 @@ class TestEndConversation:
 
 class TestConversationHistory:
     def test_conversation_history_success(self, client):
-        mock_conv_repo = MagicMock()
-        fake_conv = MagicMock()
-        fake_conv.id = uuid.uuid4()
-        fake_conv.started_at = datetime.now(timezone.utc)
-        mock_conv_repo.get_by_user.return_value = [fake_conv]
+        mock_svc = MagicMock()
+        fake_convs = [
+            {
+                "id": str(uuid.uuid4()),
+                "started_at": datetime.now(timezone.utc),
+            }
+        ]
+        mock_svc.get_history.return_value = fake_convs
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
             response = client.get("/conversations/history")
 
@@ -80,12 +77,11 @@ class TestConversationHistory:
         assert "id" in data[0]
 
     def test_conversation_history_empty(self, client):
-        mock_conv_repo = MagicMock()
-        mock_conv_repo.get_by_user.return_value = []
+        mock_svc = MagicMock()
+        mock_svc.get_history.return_value = []
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
             response = client.get("/conversations/history")
 
@@ -95,36 +91,29 @@ class TestConversationHistory:
 
 class TestConversationDetail:
     def test_conversation_detail_success(self, client):
-        mock_conv_repo = MagicMock()
-        mock_msg_repo = MagicMock()
-        fake_conv = MagicMock()
-        fake_conv.id = uuid.uuid4()
-        fake_conv.title = "Test Conversation"
-        fake_conv.summary = "A summary"
-        fake_conv.started_at = datetime.now(timezone.utc)
-        fake_conv.ended_at = None
-        fake_conv.is_active = True
-        fake_msg = MagicMock()
-        fake_msg.id = uuid.uuid4()
-        fake_msg.speaker_label = "Person A"
-        fake_msg.transcription = "Hello"
-        fake_msg.spoken_at = datetime.now(timezone.utc)
-        fake_conv.messages = [fake_msg]
-        mock_conv_repo.get_by_id.return_value = fake_conv
-        mock_msg_repo.get_by_conversation.return_value = [fake_msg]
+        mock_svc = MagicMock()
+        fake_detail = {
+            "id": str(uuid.uuid4()),
+            "title": "Test Conversation",
+            "summary": "A summary",
+            "started_at": datetime.now(timezone.utc),
+            "ended_at": None,
+            "is_active": True,
+            "messages": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "speaker_label": "Person A",
+                    "transcription": "Hello",
+                    "spoken_at": datetime.now(timezone.utc),
+                }
+            ],
+        }
+        mock_svc.get_detail.return_value = fake_detail
 
-        patches = [
-            patch(
-                "app.routers.conversations.ConversationRepository",
-                return_value=mock_conv_repo,
-            ),
-            patch(
-                "app.routers.conversations.MessageRepository",
-                return_value=mock_msg_repo,
-            ),
-        ]
-        with patches[0], patches[1]:
-            response = client.get(f"/conversations/{fake_conv.id}")
+        with patch(
+            "app.routers.conversations.ConversationService", return_value=mock_svc
+        ):
+            response = client.get(f"/conversations/{uuid.uuid4()}")
 
         assert response.status_code == 200
         data = response.json()
@@ -135,12 +124,11 @@ class TestConversationDetail:
         assert data["messages"][0]["transcription"] == "Hello"
 
     def test_conversation_detail_not_found(self, client):
-        mock_conv_repo = MagicMock()
-        mock_conv_repo.get_by_id.return_value = None
+        mock_svc = MagicMock()
+        mock_svc.get_detail.return_value = None
 
         with patch(
-            "app.routers.conversations.ConversationRepository",
-            return_value=mock_conv_repo,
+            "app.routers.conversations.ConversationService", return_value=mock_svc
         ):
             response = client.get(f"/conversations/{uuid.uuid4()}")
 

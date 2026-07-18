@@ -8,10 +8,8 @@ class TestRegister:
     def test_register_success(self, anon_client):
         mock_repo = MagicMock()
         mock_repo.get_by_email.return_value = None
-        fake_user_id = uuid.uuid4()
-        mock_user = MagicMock()
-        mock_user.id = fake_user_id
-        mock_repo.create.return_value = mock_user
+        fake_id = uuid.uuid4()
+        mock_repo.create.return_value = MagicMock(id=fake_id)
 
         with patch("app.routers.auth.UserRepository", return_value=mock_repo):
             response = anon_client.post(
@@ -51,11 +49,10 @@ class TestLogin:
     def test_login_success(self, anon_client):
         mock_repo = MagicMock()
         hashed = hash_password("password123")
-        fake_user_id = uuid.uuid4()
-        mock_user = MagicMock()
-        mock_user.id = fake_user_id
-        mock_user.password_hash = hashed
-        mock_repo.get_by_email.return_value = mock_user
+        fake_id = uuid.uuid4()
+        mock_repo.get_by_email.return_value = MagicMock(
+            password_hash=hashed, id=fake_id
+        )
 
         with patch("app.routers.auth.UserRepository", return_value=mock_repo):
             response = anon_client.post(
@@ -71,9 +68,7 @@ class TestLogin:
     def test_login_wrong_password(self, anon_client):
         mock_repo = MagicMock()
         hashed = hash_password("correct-password")
-        mock_user = MagicMock()
-        mock_user.password_hash = hashed
-        mock_repo.get_by_email.return_value = mock_user
+        mock_repo.get_by_email.return_value = MagicMock(password_hash=hashed)
 
         with patch("app.routers.auth.UserRepository", return_value=mock_repo):
             response = anon_client.post(
@@ -102,11 +97,11 @@ class TestLogin:
 
 
 class TestMe:
-    def test_me_success(self, client, fake_user):
+    def test_me_success(self, client):
         response = client.get("/auth/me")
         assert response.status_code == 200
         data = response.json()
-        assert data["email"] == fake_user.email
+        assert data["email"] == "test@example.com"
         assert "id" in data
 
     def test_me_unauthorized(self, anon_client):

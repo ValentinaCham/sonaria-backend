@@ -5,25 +5,18 @@ from unittest.mock import MagicMock, patch
 
 class TestListEvents:
     def test_list_events_success(self, client):
-        mock_sound_repo = MagicMock()
-        mock_event_repo = MagicMock()
-        fake_event = MagicMock()
-        fake_event.id = uuid.uuid4()
-        fake_event.context_message = "Doorbell detected"
-        fake_event.detected_at = datetime.now(timezone.utc)
-        fake_event.is_notified = False
-        mock_event_repo.get_by_user.return_value = [fake_event]
+        mock_svc = MagicMock()
+        fake_events = [
+            {
+                "id": str(uuid.uuid4()),
+                "context_message": "Doorbell detected",
+                "detected_at": datetime.now(timezone.utc),
+                "is_notified": False,
+            }
+        ]
+        mock_svc.list_events.return_value = fake_events
 
-        with (
-            patch(
-                "app.routers.events.SoundRepository",
-                return_value=mock_sound_repo,
-            ),
-            patch(
-                "app.routers.events.EventRepository",
-                return_value=mock_event_repo,
-            ),
-        ):
+        with patch("app.routers.events.SoundService", return_value=mock_svc):
             response = client.get("/events")
 
         assert response.status_code == 200
@@ -34,20 +27,10 @@ class TestListEvents:
         assert "detected_at" in data[0]
 
     def test_list_events_empty(self, client):
-        mock_sound_repo = MagicMock()
-        mock_event_repo = MagicMock()
-        mock_event_repo.get_by_user.return_value = []
+        mock_svc = MagicMock()
+        mock_svc.list_events.return_value = []
 
-        with (
-            patch(
-                "app.routers.events.SoundRepository",
-                return_value=mock_sound_repo,
-            ),
-            patch(
-                "app.routers.events.EventRepository",
-                return_value=mock_event_repo,
-            ),
-        ):
+        with patch("app.routers.events.SoundService", return_value=mock_svc):
             response = client.get("/events")
 
         assert response.status_code == 200

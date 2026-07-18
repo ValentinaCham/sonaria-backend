@@ -4,17 +4,16 @@ from unittest.mock import MagicMock, patch
 
 class TestRegisterVoice:
     def test_register_voice_success(self, client):
-        mock_repo = MagicMock()
-        fake_voice = MagicMock()
-        fake_voice.id = uuid.uuid4()
-        fake_voice.name = "Test Voice"
-        fake_voice.is_prioritized = False
-        mock_repo.create.return_value = fake_voice
+        mock_svc = MagicMock()
+        fake_voice = {
+            "id": str(uuid.uuid4()),
+            "name": "Test Voice",
+            "is_prioritized": False,
+        }
+        mock_svc.register.return_value = fake_voice
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
-            response = client.post(
-                "/voices/register", json={"name": "Test Voice"}
-            )
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
+            response = client.post("/voices/register", json={"name": "Test Voice"})
 
         assert response.status_code == 201
         data = response.json()
@@ -27,22 +26,23 @@ class TestRegisterVoice:
         assert response.status_code == 422
 
     def test_register_voice_unauthorized(self, anon_client):
-        response = anon_client.post(
-            "/voices/register", json={"name": "Test Voice"}
-        )
+        response = anon_client.post("/voices/register", json={"name": "Test Voice"})
         assert response.status_code == 403
 
 
 class TestListVoices:
     def test_list_voices_success(self, client):
-        mock_repo = MagicMock()
-        fake_voice = MagicMock()
-        fake_voice.id = uuid.uuid4()
-        fake_voice.name = "Voice 1"
-        fake_voice.is_prioritized = True
-        mock_repo.get_by_user.return_value = [fake_voice]
+        mock_svc = MagicMock()
+        fake_voices = [
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Voice 1",
+                "is_prioritized": True,
+            }
+        ]
+        mock_svc.list_by_user.return_value = fake_voices
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.get("/voices")
 
         assert response.status_code == 200
@@ -52,10 +52,10 @@ class TestListVoices:
         assert data[0]["is_prioritized"] is True
 
     def test_list_voices_empty(self, client):
-        mock_repo = MagicMock()
-        mock_repo.get_by_user.return_value = []
+        mock_svc = MagicMock()
+        mock_svc.list_by_user.return_value = []
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.get("/voices")
 
         assert response.status_code == 200
@@ -64,16 +64,17 @@ class TestListVoices:
 
 class TestUpdateVoice:
     def test_update_voice_success(self, client):
-        mock_repo = MagicMock()
-        fake_voice = MagicMock()
-        fake_voice.id = uuid.uuid4()
-        fake_voice.name = "Updated Voice"
-        fake_voice.is_prioritized = True
-        mock_repo.update.return_value = fake_voice
+        mock_svc = MagicMock()
+        fake_voice = {
+            "id": str(uuid.uuid4()),
+            "name": "Updated Voice",
+            "is_prioritized": True,
+        }
+        mock_svc.update.return_value = fake_voice
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.put(
-                f"/voices/{fake_voice.id}",
+                f"/voices/{uuid.uuid4()}",
                 json={"name": "Updated Voice", "is_prioritized": True},
             )
 
@@ -83,10 +84,10 @@ class TestUpdateVoice:
         assert data["is_prioritized"] is True
 
     def test_update_voice_not_found(self, client):
-        mock_repo = MagicMock()
-        mock_repo.update.return_value = None
+        mock_svc = MagicMock()
+        mock_svc.update.return_value = None
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.put(
                 f"/voices/{uuid.uuid4()}",
                 json={"name": "Ghost Voice"},
@@ -98,19 +99,19 @@ class TestUpdateVoice:
 
 class TestDeleteVoice:
     def test_delete_voice_success(self, client):
-        mock_repo = MagicMock()
-        mock_repo.delete.return_value = True
+        mock_svc = MagicMock()
+        mock_svc.delete.return_value = True
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.delete(f"/voices/{uuid.uuid4()}")
 
         assert response.status_code == 204
 
     def test_delete_voice_not_found(self, client):
-        mock_repo = MagicMock()
-        mock_repo.delete.return_value = False
+        mock_svc = MagicMock()
+        mock_svc.delete.return_value = False
 
-        with patch("app.routers.voices.VoiceRepository", return_value=mock_repo):
+        with patch("app.routers.voices.VoiceService", return_value=mock_svc):
             response = client.delete(f"/voices/{uuid.uuid4()}")
 
         assert response.status_code == 404
