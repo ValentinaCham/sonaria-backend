@@ -6,278 +6,219 @@
 <title>SONARIA · Reconocimiento y diagrama de voz</title>
 <style>
   :root {
-    --bg: #0b1020; --panel: #141a2e; --panel-2: #1b2340;
-    --text: #eef2ff; --muted: #9aa6c7; --accent: #4f8cff; --accent-2: #22d3a6;
-    --danger: #ff5d6c; --border: #26304f;
-    --p1: #4f8cff; --p2: #22d3a6; --p3: #ffbf47; --p4: #ff6b6b; --p5: #c084fc; --p6: #38bdf8;
+    --bg: #070b16; --panel: #131a2e; --panel-2: #1b2340;
+    --text: #f3f6ff; --muted: #aab6d6; --accent: #5b9bff; --accent-2: #2ce0b0;
+    --danger: #ff6b78; --border: #2b3660; --focus: #ffd166;
+    --p1: #5b9bff; --p2: #2ce0b0; --p3: #ffc857; --p4: #ff7a85; --p5: #c79bff; --p6: #4dd0ff;
+    --radius: 16px;
   }
   * { box-sizing: border-box; }
+  html { font-size: 17px; }
   body {
     margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: radial-gradient(1200px 800px at 80% -10%, #16204a, transparent), var(--bg);
-    background-color: var(--bg); color: var(--text); min-height: 100vh;
+    background: radial-gradient(1200px 800px at 80% -10%, #17224e, transparent), var(--bg);
+    background-color: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.45;
   }
+  /* Accesibilidad: foco siempre visible y grande */
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 8px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
   header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 24px; border-bottom: 1px solid var(--border);
-    background: rgba(20, 26, 46, 0.7); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(15, 20, 38, 0.85); backdrop-filter: blur(8px);
     position: sticky; top: 0; z-index: 10;
   }
   .brand { display: flex; align-items: center; gap: 12px; }
-  .logo { width: 40px; height: 40px; border-radius: 12px;
+  .logo { width: 44px; height: 44px; border-radius: 12px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: grid; place-items: center; font-weight: 800; font-size: 20px; }
-  .brand h1 { font-size: 20px; margin: 0; letter-spacing: 0.5px; }
-  .brand p { margin: 0; font-size: 12px; color: var(--muted); }
-  .status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted);
-    padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); }
-  .dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
-  .dot.live { background: var(--accent-2); box-shadow: 0 0 0 4px rgba(34,211,166,.18); animation: pulse 1.4s infinite; }
+    display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #06122b; }
+  .brand h1 { font-size: 22px; margin: 0; letter-spacing: 0.5px; }
+  .brand p { margin: 0; font-size: 13px; color: var(--muted); }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--text);
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #7c89a8; flex: 0 0 12px; }
+  .dot.live { background: var(--accent-2); box-shadow: 0 0 0 4px rgba(44,224,176,.22); animation: pulse 1.4s infinite; }
   .dot.err { background: var(--danger); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
-  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
-  .col-right { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 90px; }
+  main { max-width: 1220px; margin: 0 auto; padding: 24px; }
+  .layout { display: grid; grid-template-columns: 1fr 390px; gap: 20px; align-items: start; }
+  @media (max-width: 920px) { .layout { grid-template-columns: 1fr; } }
+  .col-right { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 92px; }
 
   .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-  button { font-size: 16px; font-weight: 600; cursor: pointer; border: none; border-radius: 12px;
-    padding: 12px 20px; color: white; transition: transform .05s ease, filter .15s ease; }
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+  button { font-size: 17px; font-weight: 700; cursor: pointer; border: none; border-radius: 12px;
+    padding: 13px 22px; min-height: 48px; color: #06122b; transition: transform .05s ease, filter .15s ease; }
+  button:hover { filter: brightness(1.08); }
   button:active { transform: translateY(1px); }
   button:disabled { opacity: .45; cursor: not-allowed; }
   .btn-start { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
-  .btn-stop { background: linear-gradient(135deg, #ff5d6c, #ff8a5c); }
-  .field { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
-  .field input[type=number] { width: 64px; background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; padding: 8px; font-size: 15px; text-align: center; }
-  .meter { flex: 1; min-width: 120px; height: 10px; border-radius: 999px;
+  .btn-stop { background: linear-gradient(135deg, #ff6b78, #ff9a6c); color: #2a0a0e; }
+  .field { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 15px; min-height: 44px; }
+  .field input[type=number] { width: 68px; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 10px; font-size: 16px; text-align: center; min-height: 44px; }
+  .field input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--accent-2); }
+  .meter { flex: 1; min-width: 130px; height: 12px; border-radius: 999px;
     background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
   .meter > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .08s linear; }
 
-  .speakers { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-  .chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border);
-    border-radius: 999px; padding: 6px 14px 6px 8px; cursor: pointer; font-size: 14px; user-select: none; }
-  .chip .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #06122b; font-size: 13px; }
-  .chip small { color: var(--muted); }
-  .chip.speaking { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(34,211,166,.22); }
-  .chip.speaking::after { content: "● hablando"; color: var(--accent-2); font-size: 11px; font-weight: 700; }
+  h2.section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 0 0 10px; }
 
-  .transcript { background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
-    padding: 18px; min-height: 320px; display: flex; flex-direction: column; gap: 14px; }
-  .empty { color: var(--muted); text-align: center; margin: auto; font-size: 15px; }
+  .speakers { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 2px solid var(--border);
+    border-radius: 999px; padding: 8px 16px 8px 8px; cursor: pointer; font-size: 15px; font-weight: 600; user-select: none; min-height: 44px; }
+  .chip .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #06122b; font-size: 14px; }
+  .chip .edit { color: var(--muted); font-size: 12px; font-weight: 700; }
+  .chip.speaking { border-color: var(--accent-2); background: rgba(44,224,176,.12); }
+  .chip .live-pill { display: none; align-items: center; gap: 4px; color: #06251d; background: var(--accent-2);
+    font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+  .chip.speaking .live-pill { display: inline-flex; }
+
+  .transcript { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; min-height: 340px; max-height: 62vh; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .empty { color: var(--muted); text-align: center; margin: auto; font-size: 16px; }
   .turn-group { display: flex; flex-direction: column; gap: 6px; }
   .turn { display: flex; gap: 12px; align-items: flex-start; animation: fade .2s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(6px);} to {opacity:1; transform:none;} }
-  .turn .avatar { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: #06122b; }
-  .bubble { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; max-width: 100%; }
-  .bubble .who { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-  .bubble .txt { font-size: 20px; line-height: 1.4; }
-  .turn.partial .bubble { border-style: dashed; opacity: .85; }
+  .turn .avatar { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: #06122b; font-size: 16px; }
+  .bubble { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; max-width: 100%; border-left: 5px solid var(--border); }
+  .bubble .who { font-weight: 800; font-size: 15px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .bubble .txt { font-size: 21px; line-height: 1.4; }
+  .turn.partial .bubble { border-style: dashed; opacity: .9; }
   .turn.partial .txt::after { content: "|"; animation: blink 1s steps(1) infinite; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
 
-  .banner { background: rgba(255,93,108,.12); border: 1px solid var(--danger); color: #ffd3d8;
-    border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; display: none; }
-  .hint { color: var(--muted); font-size: 13px; margin-top: 14px; }
-  footer { text-align:center; color: var(--muted); font-size: 12px; padding: 24px; }
+  .banner { background: rgba(255,107,120,.14); border: 1px solid var(--danger); color: #ffd9dd;
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 15px; display: none; }
+  .hint { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  footer { text-align:center; color: var(--muted); font-size: 13px; padding: 24px; }
 
-  .panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-  .panel-card h2 { margin: 0 0 12px; font-size: 15px; letter-spacing: .3px; }
-  .viz-label { color: var(--muted); font-size: 12px; margin: 10px 0 6px; }
-  #wave, #spec { width: 100%; display: block; background: #0a0f1f; border: 1px solid var(--border); border-radius: 10px; }
+  .panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .panel-card h2 { margin: 0 0 12px; font-size: 16px; letter-spacing: .3px; }
+  .viz-label { color: var(--muted); font-size: 13px; margin: 10px 0 6px; }
+  #wave, #spec { width: 100%; display: block; background: #060a15; border: 1px solid var(--border); border-radius: 10px; }
   .vc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-  .vc-avatar { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #06122b; background: #334155; }
-  .vc-name { font-size: 18px; font-weight: 700; }
-  .vc-sub { color: var(--muted); font-size: 12px; }
-  .vc-conf { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
+  .vc-avatar { width: 52px; height: 52px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #06122b; background: #3a4666; }
+  .vc-name { font-size: 20px; font-weight: 800; }
+  .vc-sub { color: var(--muted); font-size: 13px; }
+  .vc-conf { height: 10px; border-radius: 999px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
   .vc-conf > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s ease; }
   .vc-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
-  .metric { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; text-align: center; }
-  .metric span { display: block; color: var(--muted); font-size: 11px; }
-  .metric b { font-size: 15px; }
+  .metric { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+  .metric span { display: block; color: var(--muted); font-size: 12px; }
+  .metric b { font-size: 16px; }
   .voices-list { display: flex; flex-direction: column; gap: 6px; }
-  .voice-item { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; cursor: pointer; }
-  .voice-item .swatch { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 14px; }
-  .voice-item .vi-name { flex: 1; font-size: 14px; }
+  .voice-item { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; min-height: 44px; }
+  .voice-item .swatch { width: 16px; height: 16px; border-radius: 4px; flex: 0 0 16px; }
+  .voice-item .vi-name { flex: 1; font-size: 15px; font-weight: 600; }
   .voice-item small { color: var(--muted); }
-  .voice-item.active { border-color: var(--accent-2); box-shadow: 0 0 0 2px rgba(34,211,166,.18); }
+  .voice-item.active { border-color: var(--accent-2); box-shadow: 0 0 0 2px rgba(44,224,176,.22); }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  @media (prefers-contrast: more) {
+    :root { --panel: #0a0f1f; --panel-2: #10162b; --border: #4a5896; --muted: #c7d0ec; }
+    .bubble { border-width: 2px; }
+  }
 </style>
 </head>
 <body>
 <header>
   <div class="brand">
-    <div class="logo">S</div>
+    <div class="logo" aria-hidden="true">S</div>
     <div>
       <h1>SONARIA</h1>
-      <p>Deteccion, reconocimiento y diagrama de voz en tiempo real</p>
+      <p>Reconocimiento y diagrama de voz en tiempo real</p>
     </div>
   </div>
-  <div class="status">
-    <span class="dot" id="dot"></span>
+  <div class="status" role="status" aria-live="polite">
+    <span class="dot" id="dot" aria-hidden="true"></span>
     <span id="statusText">Desconectado</span>
   </div>
 </header>
 
 <main>
-  <div class="banner" id="banner"></div>
+  <div class="banner" id="banner" role="alert"></div>
 
-  <div class="controls">
-    <button class="btn-start" id="startBtn">Empezar a escuchar</button>
-    <button class="btn-stop" id="stopBtn" disabled>Detener</button>
+  <div class="controls" role="group" aria-label="Controles de captura de audio">
+    <button class="btn-start" id="startBtn" aria-label="Empezar a escuchar el micrófono">Empezar a escuchar</button>
+    <button class="btn-stop" id="stopBtn" disabled aria-label="Detener la escucha">Detener</button>
     <div class="field">
-      <label for="maxSpeakers">N personas</label>
-      <input type="number" id="maxSpeakers" min="1" max="10" value="2" />
+      <label for="maxSpeakers">Nº de personas</label>
+      <input type="number" id="maxSpeakers" min="1" max="10" value="2" aria-label="Número de personas esperadas" />
     </div>
     <label class="field" style="cursor:pointer" title="Quita el ruido ambiente antes de transcribir">
-      <input type="checkbox" id="cleanChk" checked style="width:18px;height:18px" />
+      <input type="checkbox" id="cleanChk" checked />
       Reducir ruido ambiente
     </label>
-    <div class="meter" title="Nivel de microfono"><div id="level"></div></div>
+    <div class="meter" title="Nivel de micrófono" role="meter" aria-label="Nivel del micrófono" aria-valuemin="0" aria-valuemax="100"><div id="level"></div></div>
   </div>
 
   <div class="layout">
-    <section class="col-left">
-      <div class="speakers" id="speakers"></div>
+    <section class="col-left" aria-label="Conversación">
+      <h2 class="section-title" id="speakersTitle">Personas detectadas</h2>
+      <div class="speakers" id="speakers" role="list" aria-labelledby="speakersTitle"></div>
 
-      <div class="transcript" id="transcript">
+      <h2 class="section-title">Transcripción en vivo</h2>
+      <div class="transcript" id="transcript" role="log" aria-live="polite" aria-relevant="additions text" aria-label="Transcripción de la conversación en vivo">
         <div class="empty" id="empty">
           Pulsa <b>"Empezar a escuchar"</b> y habla.<br />
-          Veras en vivo quien habla y que dice. Toca a una persona para ponerle su nombre real.
+          Verás en vivo quién habla y qué dice. Toca a una persona para ponerle su nombre real.
         </div>
       </div>
 
-<<<<<<< HEAD
-      <p class="hint">Consejo: indica el numero real de personas antes de empezar y hablen por turnos al inicio. Toca "Persona 1/2..." para reconocerla con su nombre (se recuerda).</p>
+      <p class="hint">Consejo: indica el número real de personas antes de empezar y hablen por turnos al inicio. Toca "Persona 1/2…" para reconocerla con su nombre (se recuerda en este navegador).</p>
     </section>
 
-    <aside class="col-right">
+    <aside class="col-right" aria-label="Análisis de voz">
       <div class="panel-card">
         <h2>Diagrama de voz</h2>
         <div class="viz-label">Onda sonora (tiempo real)</div>
-        <canvas id="wave" width="360" height="80"></canvas>
-        <div class="viz-label">Espectrograma - analisis Python (MEL)</div>
-        <canvas id="spec" width="360" height="130"></canvas>
+        <canvas id="wave" width="360" height="80" role="img" aria-label="Onda sonora del micrófono en tiempo real"></canvas>
+        <div class="viz-label">Espectrograma · análisis Python (MEL)</div>
+        <canvas id="spec" width="360" height="130" role="img" aria-label="Espectrograma de la voz calculado en el servidor"></canvas>
       </div>
-=======
-        function createOrGetBubble(bubbleId, speaker) {
-            let bubble = document.getElementById(bubbleId);
-            if (!bubble) {
-                bubble = document.createElement('div');
-                bubble.id = bubbleId;
-                bubble.className = 'bubble speaker-' + speaker;
-                
-                let speakerName;
-                if (speaker === 'me') speakerName = '🎙️ Yo';
-                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
-                else speakerName = 'Persona ' + speaker;
-                
-                bubble.innerHTML = `<strong><span class="name">${speakerName}</span><span class="revised-badge">(Corregido por IA)</span></strong><span class="text"></span>`;
-                transcriptDiv.appendChild(bubble);
-            }
-            return bubble;
-        }
 
-        function updateBubble(turnOrder, speaker, text, isFinal, isRevision) {
-            updateSpeakerCount(speaker);
-            
-            // Usamos un id que mezcla si es final o no. Si no es final, actualizamos la misma burbuja temporal
-            const bubbleId = isFinal ? `bubble-final-${turnOrder}` : 'bubble-partial';
-            
-            let bubble = createOrGetBubble(bubbleId, speaker);
-            
-            // Si es parcial, actualizamos el speaker dinámicamente si cambia
-            if (!isFinal) {
-                bubble.className = 'bubble active speaker-' + speaker;
-                let speakerName;
-                if (speaker === 'me') speakerName = '🎙️ Yo';
-                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
-                else speakerName = 'Persona ' + speaker;
-                bubble.querySelector('.name').textContent = speakerName;
-            }
-            
-            bubble.querySelector('.text').textContent = text;
-            
-            if (isRevision) {
-                // Si la IA corrigió este turno en el pasado
-                bubble.className = 'bubble inactive speaker-' + speaker;
-                let speakerName;
-                if (speaker === 'me') speakerName = '🎙️ Yo';
-                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
-                else speakerName = 'Persona ' + speaker;
-                bubble.querySelector('.name').textContent = speakerName;
-                bubble.querySelector('.revised-badge').style.display = 'inline';
-            } else if (!isRevision && speaker !== 'UNKNOWN') {
-                // Lógica de prioridad para lo nuevo
-                if (speaker !== lastSpeaker) {
-                    document.querySelectorAll('.bubble').forEach(b => {
-                        b.classList.remove('active');
-                        b.classList.add('inactive');
-                    });
-                    bubble.classList.remove('inactive');
-                    bubble.classList.add('active');
-                    lastSpeaker = speaker;
-                } else if (speaker === lastSpeaker) {
-                     bubble.classList.remove('inactive');
-                     bubble.classList.add('active');
-                }
-            }
-            
-            if (isFinal && !isRevision) {
-                // Limpiar la burbuja parcial si se acaba de consolidar un final
-                let partialBubble = document.getElementById('bubble-partial');
-                if (partialBubble) {
-                    partialBubble.querySelector('.text').textContent = '';
-                    partialBubble.style.display = 'none';
-                }
-            } else if (!isFinal) {
-                bubble.style.display = 'block';
-            }
-            
-            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
-        }
->>>>>>> ebeed1b839bf8b3f5b844d0f391eda250cde9205
-
-      <div class="panel-card">
-        <h2>Clasificacion de voz</h2>
+      <div class="panel-card" aria-live="polite">
+        <h2>Clasificación de voz</h2>
         <div class="vc-head">
-          <div class="vc-avatar" id="vcAvatar">-</div>
+          <div class="vc-avatar" id="vcAvatar" aria-hidden="true">–</div>
           <div>
-            <div class="vc-name" id="vcName">Esperando voz...</div>
-            <div class="vc-sub" id="vcSub">La voz se clasifica por su huella acustica</div>
+            <div class="vc-name" id="vcName">Esperando voz…</div>
+            <div class="vc-sub" id="vcSub">La voz se clasifica por su huella acústica</div>
           </div>
         </div>
-        <div class="vc-conf"><div id="vcConf"></div></div>
+        <div class="vc-conf" role="progressbar" aria-label="Confianza de la clasificación" aria-valuemin="0" aria-valuemax="100"><div id="vcConf"></div></div>
         <div class="vc-metrics">
-          <div class="metric"><span>Tono (F0)</span><b id="vcPitch">- Hz</b></div>
-          <div class="metric"><span>Brillo</span><b id="vcBright">- Hz</b></div>
-          <div class="metric"><span>Confianza</span><b id="vcConfTxt">-</b></div>
+          <div class="metric"><span>Tono (F0)</span><b id="vcPitch">– Hz</b></div>
+          <div class="metric"><span>Brillo</span><b id="vcBright">– Hz</b></div>
+          <div class="metric"><span>Confianza</span><b id="vcConfTxt">–</b></div>
         </div>
-        <div class="voices-list" id="voicesList"></div>
+        <div class="voices-list" id="voicesList" role="list" aria-label="Voces clasificadas"></div>
       </div>
     </aside>
   </div>
 </main>
 
-<footer>SONARIA - demo local - audio 16kHz PCM -> AssemblyAI + analisis NumPy/SciPy</footer>
+<footer>SONARIA · demo local · audio 16kHz PCM → AssemblyAI + análisis NumPy/SciPy</footer>
 
 <script>
 const SPEAKER_COLORS = { "A":"var(--p1)","B":"var(--p2)","C":"var(--p3)","D":"var(--p4)","E":"var(--p5)","F":"var(--p6)" };
 function colorFor(label) {
-  if (!label) return "#64748b";
-  return SPEAKER_COLORS[label.toUpperCase()] || "#64748b";
+  if (!label) return "#7c89a8";
+  return SPEAKER_COLORS[label.toUpperCase()] || "#7c89a8";
 }
 
 const names = JSON.parse(localStorage.getItem("sonaria_names") || "{}");
 function saveNames() { localStorage.setItem("sonaria_names", JSON.stringify(names)); }
-function displayName(label, fallback) { return (label && names[label]) ? names[label] : (fallback || "Identificando..."); }
+function displayName(label, fallback) { return (label && names[label]) ? names[label] : (fallback || "Identificando…"); }
 function initials(str) {
   const s = (str || "?").trim();
   return s.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
 }
 function friendly(label) {
-  if (!label || label === "?") return "Identificando...";
+  if (!label || label === "?") return "Identificando…";
   const up = label.toUpperCase();
   if (up.length === 1 && up >= "A" && up <= "Z") return "Persona " + (up.charCodeAt(0) - 64);
   return "Persona " + label;
@@ -311,7 +252,7 @@ const turnStore = {};
 let liveCounter = 0;
 
 function setStatus(text, mode) { statusText.textContent = text; dot.className = "dot" + (mode ? " " + mode : ""); }
-function showError(msg) { banner.style.display = "block"; banner.textContent = "! " + msg; }
+function showError(msg) { banner.style.display = "block"; banner.textContent = "⚠ " + msg; }
 function hideError() { banner.style.display = "none"; }
 
 function renderSpeakerChips() {
@@ -321,22 +262,29 @@ function renderSpeakerChips() {
     const chip = document.createElement("div");
     chip.className = "chip";
     chip.dataset.chip = label;
+    chip.setAttribute("role", "listitem");
+    chip.setAttribute("tabindex", "0");
+    chip.setAttribute("aria-label", "Persona " + displayName(label, fallback) + ". Pulsa para poner su nombre real.");
     chip.title = "Toca para poner el nombre real";
     chip.innerHTML =
       '<span class="avatar" style="background:' + colorFor(label) + '">' + initials(displayName(label, fallback)) + '</span>' +
-      '<span>' + displayName(label, fallback) + '</span><small>edit</small>';
-    chip.onclick = () => {
-      const name = prompt('Como se llama "' + fallback + '"?', names[label] || "");
+      '<span class="chip-name">' + displayName(label, fallback) + '</span>' +
+      '<span class="live-pill" aria-hidden="true">● hablando</span>' +
+      '<span class="edit" aria-hidden="true">✎</span>';
+    const rename = () => {
+      const name = prompt('¿Cómo se llama "' + fallback + '"?', names[label] || "");
       if (name === null) return;
       const t = name.trim();
       if (t) names[label] = t; else delete names[label];
       saveNames(); renderSpeakerChips(); refreshRenderedNames(label);
     };
+    chip.onclick = rename;
+    chip.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); rename(); } };
     speakersEl.appendChild(chip);
   });
 }
 function refreshRenderedNames(label) {
-  document.querySelectorAll('[data-label="' + label + '"] .who').forEach(el => {
+  document.querySelectorAll('[data-label="' + label + '"] .who-name').forEach(el => {
     el.textContent = displayName(label, friendly(label));
   });
 }
@@ -351,6 +299,12 @@ function setActiveSpeakers(labels) {
 function turnKey(turnOrder, isPartial) {
   if (turnOrder !== null && turnOrder !== undefined) return "t" + turnOrder;
   return isPartial ? "__live__" : null;
+}
+// Defensa: si un mensaje no trae segments, sintetizamos uno con speaker/text.
+function segmentsOf(msg) {
+  if (msg.segments && msg.segments.length) return msg.segments;
+  if (msg.text) return [{ speaker_label: msg.speaker_label || msg.speaker || "?", text: msg.text }];
+  return [];
 }
 function renderTurn(turnOrder, segments, isPartial) {
   if (!segments || !segments.length) return;
@@ -376,8 +330,9 @@ function renderTurn(turnOrder, segments, isPartial) {
     row.className = "turn" + (isPartial ? " partial" : "");
     row.dataset.label = label;
     row.innerHTML =
-      '<div class="avatar" style="background:' + colorFor(label) + '">' + initials(displayName(label, fallback)) + '</div>' +
-      '<div class="bubble"><div class="who" style="color:' + colorFor(label) + '">' + displayName(label, fallback) + '</div>' +
+      '<div class="avatar" style="background:' + colorFor(label) + '" aria-hidden="true">' + initials(displayName(label, fallback)) + '</div>' +
+      '<div class="bubble" style="border-left-color:' + colorFor(label) + '">' +
+      '<div class="who" style="color:' + colorFor(label) + '"><span class="who-name">' + displayName(label, fallback) + '</span></div>' +
       '<div class="txt"></div></div>';
     row.querySelector(".txt").textContent = seg.text;
     entry.el.appendChild(row);
@@ -393,15 +348,15 @@ function settleTurns() {
 
 function heat(v) {
   v = Math.max(0, Math.min(1, v));
-  const stops = [[10,15,40],[30,80,160],[30,180,140],[220,200,60],[240,80,60]];
+  const stops = [[8,12,32],[30,80,170],[30,190,150],[230,205,70],[245,90,70]];
   const t = v * (stops.length - 1), i = Math.floor(t), f = t - i;
   const a = stops[i], b = stops[Math.min(i + 1, stops.length - 1)];
   return "rgb(" + Math.round(a[0]+(b[0]-a[0])*f) + "," + Math.round(a[1]+(b[1]-a[1])*f) + "," + Math.round(a[2]+(b[2]-a[2])*f) + ")";
 }
 function drawWave(buf) {
   const w = waveCanvas.width, h = waveCanvas.height;
-  waveCtx.fillStyle = "#0a0f1f"; waveCtx.fillRect(0, 0, w, h);
-  waveCtx.strokeStyle = "#22d3a6"; waveCtx.lineWidth = 1.5; waveCtx.beginPath();
+  waveCtx.fillStyle = "#060a15"; waveCtx.fillRect(0, 0, w, h);
+  waveCtx.strokeStyle = "#2ce0b0"; waveCtx.lineWidth = 2; waveCtx.beginPath();
   const step = Math.max(1, Math.floor(buf.length / w));
   for (let x = 0; x < w; x++) {
     const s = buf[x * step] || 0;
@@ -423,11 +378,11 @@ function drawSpecColumn(mel) {
   }
 }
 function clearViz() {
-  specCtx.fillStyle = "#0a0f1f"; specCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
-  waveCtx.fillStyle = "#0a0f1f"; waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+  specCtx.fillStyle = "#060a15"; specCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
+  waveCtx.fillStyle = "#060a15"; waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
 }
 
-const VOICE_COLORS = ["#4f8cff","#22d3a6","#ffbf47","#ff6b6b","#c084fc","#38bdf8","#f472b6","#a3e635"];
+const VOICE_COLORS = ["#5b9bff","#2ce0b0","#ffc857","#ff7a85","#c79bff","#4dd0ff","#f78fb3","#a3e635"];
 function voiceColor(id) { return VOICE_COLORS[id % VOICE_COLORS.length]; }
 const voiceNames = JSON.parse(localStorage.getItem("sonaria_voice_names") || "{}");
 function saveVoiceNames() { localStorage.setItem("sonaria_voice_names", JSON.stringify(voiceNames)); }
@@ -438,14 +393,19 @@ function renderVoicesList(activeId) {
   Object.keys(voicesMap).map(Number).sort((a, b) => a - b).forEach(id => {
     const el = document.createElement("div");
     el.className = "voice-item" + (id === activeId ? " active" : "");
-    el.innerHTML = '<span class="swatch" style="background:' + voiceColor(id) + '"></span>' +
-      '<span class="vi-name">' + voiceDisplayName(id) + '</span><small>edit</small>';
-    el.onclick = () => {
+    el.setAttribute("role", "listitem");
+    el.setAttribute("tabindex", "0");
+    el.setAttribute("aria-label", voiceDisplayName(id) + ". Pulsa para renombrar.");
+    el.innerHTML = '<span class="swatch" style="background:' + voiceColor(id) + '" aria-hidden="true"></span>' +
+      '<span class="vi-name">' + voiceDisplayName(id) + '</span><small aria-hidden="true">✎</small>';
+    const rename = () => {
       const n = prompt("Nombre para " + voiceDisplayName(id) + ":", voiceNames[id] || "");
       if (n === null) return;
       const t = n.trim(); if (t) voiceNames[id] = t; else delete voiceNames[id];
       saveVoiceNames(); renderVoicesList(activeId);
     };
+    el.onclick = rename;
+    el.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); rename(); } };
     voicesList.appendChild(el);
   });
 }
@@ -459,9 +419,10 @@ function updateClassification(msg) {
   vcSub.textContent = msg.is_new_voice ? "Nueva voz detectada" : "Voz reconocida por su huella";
   const conf = Math.round((msg.confidence || 0) * 100);
   vcConf.style.width = conf + "%";
+  vcConf.parentElement.setAttribute("aria-valuenow", String(conf));
   vcConfTxt.textContent = conf + "%";
-  vcPitch.textContent = (msg.pitch_hz ? Math.round(msg.pitch_hz) : "-") + " Hz";
-  vcBright.textContent = (msg.centroid_hz ? Math.round(msg.centroid_hz) : "-") + " Hz";
+  vcPitch.textContent = (msg.pitch_hz ? Math.round(msg.pitch_hz) : "–") + " Hz";
+  vcBright.textContent = (msg.centroid_hz ? Math.round(msg.centroid_hz) : "–") + " Hz";
   renderVoicesList(id);
 }
 
@@ -488,7 +449,7 @@ function floatTo16kPCM(input, inRate) {
 async function start() {
   hideError();
   startBtn.disabled = true;
-  setStatus("Conectando...");
+  setStatus("Conectando…");
   clearViz();
   try {
     const token = await getToken();
@@ -525,11 +486,11 @@ async function start() {
       let msg; try { msg = JSON.parse(evt.data); } catch (e) { return; }
       switch (msg.type) {
         case "connected": setStatus("Escuchando", "live"); break;
-        case "partial": renderTurn(msg.turn_order, msg.segments, true); break;
-        case "final": renderTurn(msg.turn_order, msg.segments, false); break;
+        case "partial": renderTurn(msg.turn_order, segmentsOf(msg), true); break;
+        case "final": renderTurn(msg.turn_order, segmentsOf(msg), false); break;
         case "revision":
-          if (msg.turn_order != null && turnStore["t" + msg.turn_order]) renderTurn(msg.turn_order, msg.segments, false);
-          else if (msg.segments) msg.segments.forEach(s => trackSpeaker(s.speaker_label));
+          if (msg.turn_order != null && turnStore["t" + msg.turn_order]) renderTurn(msg.turn_order, segmentsOf(msg), false);
+          else segmentsOf(msg).forEach(s => trackSpeaker(s.speaker_label));
           break;
         case "voice_analysis":
           if (msg.mel) drawSpecColumn(msg.mel);
@@ -539,7 +500,7 @@ async function start() {
       }
     };
 
-    ws.onerror = () => { showError("Error de conexion WebSocket"); setStatus("Error", "err"); };
+    ws.onerror = () => { showError("Error de conexión WebSocket"); setStatus("Error", "err"); };
     ws.onclose = () => { if (stopBtn.disabled === false) stop(); };
   } catch (err) {
     showError(err.message || String(err));
