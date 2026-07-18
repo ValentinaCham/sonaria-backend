@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.routers import auth, conversations, events, sounds, upload, voices, enrollment
 from app.websocket import audio_stream, sound_stream
+from app.services.voice_biometrics import voice_biometrics
 
 STATIC_DIR = Path(__file__).parent / "static"
 
