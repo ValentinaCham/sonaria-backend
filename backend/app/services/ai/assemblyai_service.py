@@ -65,8 +65,13 @@ def _friendly_label(raw: str | None) -> str:
     return f"Persona {raw}"
 
 
-def _group_words(words, fallback_label: str | None) -> list[dict]:
-    """Agrupa palabras consecutivas del mismo hablante en segmentos."""
+def _group_words(words, fallback_label: str | None, level: str = "full") -> list[dict]:
+    """Agrupa palabras consecutivas del mismo hablante en segmentos.
+
+    Esto es lo que permite diferenciar a las personas EN TIEMPO REAL: la
+    diarización llega palabra por palabra (word.speaker); si dos personas hablan
+    dentro del mismo turno, se separa en un segmento por cada cambio de voz.
+    """
     segments: list[tuple[str | None, list[str]]] = []
     for word in words:
         text = word.text.strip()
@@ -79,7 +84,7 @@ def _group_words(words, fallback_label: str | None) -> list[dict]:
             segments.append((spk, [text]))
     result = []
     for spk, parts in segments:
-        cleaned = clean_text(" ".join(parts), level="full")
+        cleaned = clean_text(" ".join(parts), level=level)
         if not cleaned:
             continue
         result.append({
@@ -174,9 +179,11 @@ class AssemblyAIStreamingService:
         def on_turn(client, event: TurnEvent):
             if not event.transcript:
                 return
+            turn_order = getattr(event, "turn_order", None)
+
             if event.end_of_turn:
-                # Turno final: segmentamos por hablante
-                segs = _group_words(event.words, event.speaker_label)
+                # Turno final: segmentamos por hablante (limpieza completa)
+                segs = _group_words(event.words, event.speaker_label, level="full")
                 if not segs:
                     fallback = clean_text(event.transcript, level="full")
                     if not fallback:
@@ -186,46 +193,57 @@ class AssemblyAIStreamingService:
                         "speaker_label": event.speaker_label or "?",
                         "text": fallback,
                     }]
-                # Emitir un evento por segmento (más fácil de manejar en cliente)
-                for seg in segs:
-                    self._put_nowait({
-                        "type": "final",
-                        "speaker": seg["speaker"],
-                        "speaker_label": seg["speaker_label"],
-                        "text": seg["text"],
-                        "is_final": True,
-                        "segments": segs,
-                        "timestamp_ms": int(time.time() * 1000),
-                    })
+                primary = segs[0]
+                # Un único evento por TURNO (con sus segmentos por hablante).
+                self._put_nowait({
+                    "type": "final",
+                    "turn_order": turn_order,
+                    "speaker": primary["speaker"],
+                    "speaker_label": primary["speaker_label"],
+                    "text": " ".join(s["text"] for s in segs),
+                    "is_final": True,
+                    "segments": segs,
+                    "timestamp_ms": int(time.time() * 1000),
+                })
             else:
-                # Transcripción parcial (en vivo)
-                partial_text = clean_text(event.transcript, level="light")
-                if not partial_text:
-                    return
+                # Transcripción parcial (en vivo), también separada por hablante.
+                segs = _group_words(event.words, event.speaker_label, level="light")
+                if not segs:
+                    partial_text = clean_text(event.transcript, level="light")
+                    if not partial_text:
+                        return
+                    segs = [{
+                        "speaker": _friendly_label(event.speaker_label),
+                        "speaker_label": event.speaker_label or "?",
+                        "text": partial_text,
+                    }]
+                primary = segs[0]
                 self._put_nowait({
                     "type": "partial",
-                    "speaker": _friendly_label(event.speaker_label),
-                    "speaker_label": event.speaker_label or "?",
-                    "text": partial_text,
+                    "turn_order": turn_order,
+                    "speaker": primary["speaker"],
+                    "speaker_label": primary["speaker_label"],
+                    "text": " ".join(s["text"] for s in segs),
                     "is_final": False,
-                    "segments": [],
+                    "segments": segs,
                     "timestamp_ms": int(time.time() * 1000),
                 })
 
         def on_revision(client, event: SpeakerRevisionEvent):
-            """El modelo corrige atribución de voz de turnos pasados."""
+            """El modelo corrige la atribución de voz de turnos pasados (en vivo)."""
             for item in event.revisions:
-                segs = _group_words(item.words, item.speaker_label)
+                segs = _group_words(item.words, item.speaker_label, level="full")
                 if not segs:
                     continue
+                primary = segs[0]
                 self._put_nowait({
                     "type": "revision",
-                    "speaker": _friendly_label(item.speaker_label),
-                    "speaker_label": item.speaker_label or "?",
+                    "turn_order": getattr(item, "turn_order", None),
+                    "speaker": primary["speaker"],
+                    "speaker_label": primary["speaker_label"],
                     "text": " ".join(s["text"] for s in segs),
                     "is_final": True,
                     "segments": segs,
-                    "turn_order": item.turn_order,
                     "timestamp_ms": int(time.time() * 1000),
                 })
 
