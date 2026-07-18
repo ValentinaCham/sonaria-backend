@@ -44,3 +44,20 @@ class ConversationService:
             transcription=transcription,
             speaker_label=speaker_label,
         )
+
+    def process_audio_turn(self, conversation_id: uuid.UUID, segments: list[dict]):
+        items = segments
+        if len(items) == 1 and isinstance(items[0], dict) and "segments" in items[0]:
+            items = items[0].get("segments", []) or []
+
+        for segment in items:
+            if not isinstance(segment, dict):
+                continue
+            text = str(segment.get("text", "") or "").strip()
+            if not text:
+                continue
+            self.add_message(
+                conversation_id=conversation_id,
+                transcription=text,
+                speaker_label=segment.get("speaker_label"),
+            )

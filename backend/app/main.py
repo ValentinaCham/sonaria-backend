@@ -1,10 +1,15 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.routers import auth, conversations, events, sounds, voices
 from app.websocket import audio_stream, sound_stream
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 @asynccontextmanager
@@ -34,3 +39,15 @@ app.include_router(sound_stream.router)
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+
+# ── Frontend de prueba (SONARIA Web Demo) ────────────────────────
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index():
+        index = STATIC_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index))
+        return {"status": "ok", "message": "SONARIA backend running"}

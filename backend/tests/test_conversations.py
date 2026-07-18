@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime, timezone
 from unittest.mock import MagicMock, patch
 
+from app.services.conversation_service import ConversationService
+
 
 class TestStartConversation:
     def test_start_conversation_success(self, client):
@@ -87,6 +89,38 @@ class TestConversationHistory:
 
         assert response.status_code == 200
         assert response.json() == []
+
+
+class TestConversationAudioTurn:
+    def test_process_audio_turn_saves_segments(self):
+        mock_conversation_repo = MagicMock()
+        mock_message_repo = MagicMock()
+        mock_voice_repo = MagicMock()
+        service = ConversationService(
+            mock_conversation_repo,
+            mock_message_repo,
+            mock_voice_repo,
+        )
+
+        conversation_id = uuid.uuid4()
+        segments = [
+            {"speaker": "Persona 1", "speaker_label": "A", "text": "Hola"},
+            {"speaker": "Persona 2", "speaker_label": "B", "text": "Mundo"},
+        ]
+
+        service.process_audio_turn(conversation_id, segments)
+
+        assert mock_message_repo.create.call_count == 2
+        mock_message_repo.create.assert_any_call(
+            conversation_id=conversation_id,
+            transcription="Hola",
+            speaker_label="A",
+        )
+        mock_message_repo.create.assert_any_call(
+            conversation_id=conversation_id,
+            transcription="Mundo",
+            speaker_label="B",
+        )
 
 
 class TestConversationDetail:

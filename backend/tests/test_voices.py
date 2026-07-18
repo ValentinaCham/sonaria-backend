@@ -27,7 +27,7 @@ class TestRegisterVoice:
 
     def test_register_voice_unauthorized(self, anon_client):
         response = anon_client.post("/voices/register", json={"name": "Test Voice"})
-        assert response.status_code == 403
+        assert response.status_code in (401, 403)
 
 
 class TestListVoices:

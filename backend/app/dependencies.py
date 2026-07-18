@@ -13,6 +13,11 @@ security = HTTPBearer()
 
 
 def get_db() -> Generator:
+    if SessionLocal is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Base de datos no configurada. Revisa DATABASE_URL en el archivo .env",
+        )
     db = SessionLocal()
     try:
         yield db

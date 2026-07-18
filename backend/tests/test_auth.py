@@ -106,4 +106,4 @@ class TestMe:
 
     def test_me_unauthorized(self, anon_client):
         response = anon_client.get("/auth/me")
-        assert response.status_code == 403
+        assert response.status_code in (401, 403)

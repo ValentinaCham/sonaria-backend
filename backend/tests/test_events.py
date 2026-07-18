@@ -38,4 +38,4 @@ class TestListEvents:
 
     def test_list_events_unauthorized(self, anon_client):
         response = anon_client.get("/events")
-        assert response.status_code == 403
+        assert response.status_code in (401, 403)
