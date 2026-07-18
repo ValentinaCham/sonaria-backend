@@ -191,7 +191,12 @@ async def audio_stream(
 
             # Bytes (audio PCM)
             if "bytes" in message and message["bytes"]:
-                audio = message["bytes"]
+                raw = message["bytes"]
+                # Análisis del "diagrama de voz" sobre el audio original (continuo).
+                if analyzer is not None:
+                    for ev in analyzer.feed(raw):
+                        await send_json_safe(ev)
+                audio = raw
                 if enhancer is not None:
                     audio = enhancer.process_pcm(audio)
                 if audio:

@@ -3,127 +3,107 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SONARIA · Reconocimiento de voz en vivo</title>
+<title>SONARIA · Reconocimiento y diagrama de voz</title>
 <style>
   :root {
-    --bg: #0b1020;
-    --panel: #141a2e;
-    --panel-2: #1b2340;
-    --text: #eef2ff;
-    --muted: #9aa6c7;
-    --accent: #4f8cff;
-    --accent-2: #22d3a6;
-    --danger: #ff5d6c;
-    --border: #26304f;
-    --p1: #4f8cff;
-    --p2: #22d3a6;
-    --p3: #ffbf47;
-    --p4: #ff6b6b;
-    --p5: #c084fc;
-    --p6: #38bdf8;
+    --bg: #0b1020; --panel: #141a2e; --panel-2: #1b2340;
+    --text: #eef2ff; --muted: #9aa6c7; --accent: #4f8cff; --accent-2: #22d3a6;
+    --danger: #ff5d6c; --border: #26304f;
+    --p1: #4f8cff; --p2: #22d3a6; --p3: #ffbf47; --p4: #ff6b6b; --p5: #c084fc; --p6: #38bdf8;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    margin: 0; font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
     background: radial-gradient(1200px 800px at 80% -10%, #16204a, transparent), var(--bg);
-    background-color: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
+    background-color: var(--bg); color: var(--text); min-height: 100vh;
   }
   header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(20, 26, 46, 0.7);
-    backdrop-filter: blur(8px);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    background: rgba(20, 26, 46, 0.7); backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 10;
   }
   .brand { display: flex; align-items: center; gap: 12px; }
-  .logo {
-    width: 40px; height: 40px; border-radius: 12px;
+  .logo { width: 40px; height: 40px; border-radius: 12px;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: grid; place-items: center; font-weight: 800; font-size: 20px;
-  }
+    display: grid; place-items: center; font-weight: 800; font-size: 20px; }
   .brand h1 { font-size: 20px; margin: 0; letter-spacing: 0.5px; }
   .brand p { margin: 0; font-size: 12px; color: var(--muted); }
-  .status {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 14px; color: var(--muted);
-    padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px;
-    background: var(--panel);
-  }
+  .status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted);
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
   .dot.live { background: var(--accent-2); box-shadow: 0 0 0 4px rgba(34,211,166,.18); animation: pulse 1.4s infinite; }
   .dot.err { background: var(--danger); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  .col-right { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 90px; }
 
-  .controls {
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 16px; padding: 16px; margin-bottom: 20px;
-  }
-  button {
-    font-size: 16px; font-weight: 600; cursor: pointer;
-    border: none; border-radius: 12px; padding: 12px 20px;
-    color: white; transition: transform .05s ease, filter .15s ease;
-  }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+  button { font-size: 16px; font-weight: 600; cursor: pointer; border: none; border-radius: 12px;
+    padding: 12px 20px; color: white; transition: transform .05s ease, filter .15s ease; }
   button:active { transform: translateY(1px); }
   button:disabled { opacity: .45; cursor: not-allowed; }
   .btn-start { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
   .btn-stop { background: linear-gradient(135deg, #ff5d6c, #ff8a5c); }
   .field { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
-  .field input {
-    width: 64px; background: var(--panel-2); border: 1px solid var(--border);
-    color: var(--text); border-radius: 8px; padding: 8px; font-size: 15px; text-align: center;
-  }
-  .meter {
-    flex: 1; min-width: 120px; height: 10px; border-radius: 999px;
-    background: var(--panel-2); overflow: hidden; border: 1px solid var(--border);
-  }
+  .field input[type=number] { width: 64px; background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px; font-size: 15px; text-align: center; }
+  .meter { flex: 1; min-width: 120px; height: 10px; border-radius: 999px;
+    background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
   .meter > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .08s linear; }
 
-  .speakers {
-    display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
-  }
-  .chip {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 999px; padding: 6px 14px 6px 8px; cursor: pointer;
-    font-size: 14px; user-select: none;
-  }
+  .speakers { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+  .chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px; padding: 6px 14px 6px 8px; cursor: pointer; font-size: 14px; user-select: none; }
   .chip .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; color: #06122b; font-size: 13px; }
   .chip small { color: var(--muted); }
+  .chip.speaking { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(34,211,166,.22); }
+  .chip.speaking::after { content: "● hablando"; color: var(--accent-2); font-size: 11px; font-weight: 700; }
 
-  .transcript {
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 16px; padding: 18px; min-height: 320px;
-    display: flex; flex-direction: column; gap: 14px;
-  }
+  .transcript { background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px; min-height: 320px; display: flex; flex-direction: column; gap: 14px; }
   .empty { color: var(--muted); text-align: center; margin: auto; font-size: 15px; }
+  .turn-group { display: flex; flex-direction: column; gap: 6px; }
   .turn { display: flex; gap: 12px; align-items: flex-start; animation: fade .2s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(6px);} to {opacity:1; transform:none;} }
   .turn .avatar { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; color: #06122b; }
   .bubble { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; max-width: 100%; }
   .bubble .who { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
   .bubble .txt { font-size: 20px; line-height: 1.4; }
-  .turn.partial .bubble { border-style: dashed; opacity: .8; }
+  .turn.partial .bubble { border-style: dashed; opacity: .85; }
   .turn.partial .txt::after { content: "▌"; animation: blink 1s steps(1) infinite; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
 
-  .banner {
-    background: rgba(255,93,108,.12); border: 1px solid var(--danger);
-    color: #ffd3d8; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px;
-    display: none;
-  }
-  .hint { color: var(--muted); font-size: 13px; margin-top: 14px; text-align: center; }
+  .banner { background: rgba(255,93,108,.12); border: 1px solid var(--danger); color: #ffd3d8;
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; display: none; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 14px; }
   footer { text-align:center; color: var(--muted); font-size: 12px; padding: 24px; }
+
+  /* Panel de diagrama de voz */
+  .panel-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+  .panel-card h2 { margin: 0 0 12px; font-size: 15px; letter-spacing: .3px; }
+  .viz-label { color: var(--muted); font-size: 12px; margin: 10px 0 6px; }
+  #wave, #spec { width: 100%; display: block; background: #0a0f1f; border: 1px solid var(--border); border-radius: 10px; }
+  .vc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .vc-avatar { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 18px; color: #06122b; background: #334155; }
+  .vc-name { font-size: 18px; font-weight: 700; }
+  .vc-sub { color: var(--muted); font-size: 12px; }
+  .vc-conf { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; border: 1px solid var(--border); }
+  .vc-conf > div { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); transition: width .2s ease; }
+  .vc-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+  .metric { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; text-align: center; }
+  .metric span { display: block; color: var(--muted); font-size: 11px; }
+  .metric b { font-size: 15px; }
+  .voices-list { display: flex; flex-direction: column; gap: 6px; }
+  .voice-item { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; cursor: pointer; }
+  .voice-item .swatch { width: 14px; height: 14px; border-radius: 4px; flex: 0 0 14px; }
+  .voice-item .vi-name { flex: 1; font-size: 14px; }
+  .voice-item small { color: var(--muted); }
+  .voice-item.active { border-color: var(--accent-2); box-shadow: 0 0 0 2px rgba(34,211,166,.18); }
 </style>
 </head>
 <body>
@@ -132,7 +112,7 @@
     <div class="logo">S</div>
     <div>
       <h1>SONARIA</h1>
-      <p>Detección y reconocimiento de voz en tiempo real</p>
+      <p>Detección, reconocimiento y diagrama de voz en tiempo real</p>
     </div>
   </div>
   <div class="status">
@@ -158,45 +138,76 @@
     <div class="meter" title="Nivel de micrófono"><div id="level"></div></div>
   </div>
 
-  <div class="speakers" id="speakers"></div>
+  <div class="layout">
+    <section class="col-left">
+      <div class="speakers" id="speakers"></div>
 
-  <div class="transcript" id="transcript">
-    <div class="empty" id="empty">
-      Pulsa <b>“Empezar a escuchar”</b> y habla.<br />
-      Verás en vivo quién habla y qué dice. Toca a una persona para ponerle su nombre real.
-    </div>
+      <div class="transcript" id="transcript">
+        <div class="empty" id="empty">
+          Pulsa <b>“Empezar a escuchar”</b> y habla.<br />
+          Verás en vivo quién habla y qué dice. Toca a una persona para ponerle su nombre real.
+        </div>
+      </div>
+
+      <p class="hint">Consejo: indica el número real de personas antes de empezar y hablen por turnos al inicio. Toca “Persona 1/2…” para reconocerla con su nombre (se recuerda).</p>
+    </section>
+
+    <aside class="col-right">
+      <div class="panel-card">
+        <h2>Diagrama de voz</h2>
+        <div class="viz-label">Onda sonora (tiempo real)</div>
+        <canvas id="wave" width="360" height="80"></canvas>
+        <div class="viz-label">Espectrograma · análisis Python (MEL)</div>
+        <canvas id="spec" width="360" height="130"></canvas>
+      </div>
+
+      <div class="panel-card">
+        <h2>Clasificación de voz</h2>
+        <div class="vc-head">
+          <div class="vc-avatar" id="vcAvatar">—</div>
+          <div>
+            <div class="vc-name" id="vcName">Esperando voz…</div>
+            <div class="vc-sub" id="vcSub">La voz se clasifica por su huella acústica</div>
+          </div>
+        </div>
+        <div class="vc-conf"><div id="vcConf"></div></div>
+        <div class="vc-metrics">
+          <div class="metric"><span>Tono (F0)</span><b id="vcPitch">— Hz</b></div>
+          <div class="metric"><span>Brillo</span><b id="vcBright">— Hz</b></div>
+          <div class="metric"><span>Confianza</span><b id="vcConfTxt">—</b></div>
+        </div>
+        <div class="voices-list" id="voicesList"></div>
+      </div>
+    </aside>
   </div>
-
-  <p class="hint">Consejo: para separar mejor las voces, indica el número real de personas antes de empezar. Toca “Persona 1/2…” para reconocerla con su nombre (se recuerda).</p>
 </main>
 
-<footer>SONARIA · demo local · audio 16kHz PCM → AssemblyAI streaming</footer>
+<footer>SONARIA · demo local · audio 16kHz PCM → AssemblyAI + análisis NumPy/SciPy</footer>
 
 <script>
-const SPEAKER_COLORS = {
-  "A": "var(--p1)", "B": "var(--p2)", "C": "var(--p3)",
-  "D": "var(--p4)", "E": "var(--p5)", "F": "var(--p6)",
-};
+// ── Colores por hablante (diarización AssemblyAI) ──
+const SPEAKER_COLORS = { "A":"var(--p1)","B":"var(--p2)","C":"var(--p3)","D":"var(--p4)","E":"var(--p5)","F":"var(--p6)" };
 function colorFor(label) {
   if (!label) return "#64748b";
-  const c = SPEAKER_COLORS[label.toUpperCase()];
-  if (c) return c;
-  return "#64748b";
+  return SPEAKER_COLORS[label.toUpperCase()] || "#64748b";
 }
 
-// ── Reconocimiento: nombres asignados por el usuario (persistente) ──
+// ── Nombres de hablantes (persistente) ──
 const names = JSON.parse(localStorage.getItem("sonaria_names") || "{}");
 function saveNames() { localStorage.setItem("sonaria_names", JSON.stringify(names)); }
-function displayName(label, fallback) {
-  if (label && names[label]) return names[label];
-  return fallback || "Identificando…";
-}
+function displayName(label, fallback) { return (label && names[label]) ? names[label] : (fallback || "Identificando…"); }
 function initials(str) {
   const s = (str || "?").trim();
   return s.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
 }
+function friendly(label) {
+  if (!label || label === "?") return "Identificando…";
+  const up = label.toUpperCase();
+  if (up.length === 1 && up >= "A" && up <= "Z") return "Persona " + (up.charCodeAt(0) - 64);
+  return "Persona " + label;
+}
 
-// ── Estado UI ──
+// ── DOM ──
 const dot = document.getElementById("dot");
 const statusText = document.getElementById("statusText");
 const banner = document.getElementById("banner");
@@ -207,115 +218,183 @@ const levelEl = document.getElementById("level");
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const maxSpeakersInput = document.getElementById("maxSpeakers");
+const waveCanvas = document.getElementById("wave");
+const specCanvas = document.getElementById("spec");
+const waveCtx = waveCanvas.getContext("2d");
+const specCtx = specCanvas.getContext("2d");
+const vcAvatar = document.getElementById("vcAvatar");
+const vcName = document.getElementById("vcName");
+const vcSub = document.getElementById("vcSub");
+const vcConf = document.getElementById("vcConf");
+const vcPitch = document.getElementById("vcPitch");
+const vcBright = document.getElementById("vcBright");
+const vcConfTxt = document.getElementById("vcConfTxt");
+const voicesList = document.getElementById("voicesList");
 
 const seenSpeakers = new Set();
-const partials = {}; // label -> element
+const turnStore = {};   // turnId -> { el }
+let liveCounter = 0;
 
-function setStatus(text, mode) {
-  statusText.textContent = text;
-  dot.className = "dot" + (mode ? " " + mode : "");
-}
-function showError(msg) {
-  banner.style.display = "block";
-  banner.textContent = "⚠️ " + msg;
-}
+function setStatus(text, mode) { statusText.textContent = text; dot.className = "dot" + (mode ? " " + mode : ""); }
+function showError(msg) { banner.style.display = "block"; banner.textContent = "⚠️ " + msg; }
 function hideError() { banner.style.display = "none"; }
 
+// ── Chips de personas detectadas ──
 function renderSpeakerChips() {
   speakersEl.innerHTML = "";
   [...seenSpeakers].sort().forEach(label => {
     const fallback = friendly(label);
     const chip = document.createElement("div");
     chip.className = "chip";
+    chip.dataset.chip = label;
     chip.title = "Toca para poner el nombre real";
     chip.innerHTML = `
       <span class="avatar" style="background:${colorFor(label)}">${initials(displayName(label, fallback))}</span>
       <span>${displayName(label, fallback)}</span>
       <small>✎</small>`;
     chip.onclick = () => {
-      const current = names[label] || "";
-      const name = prompt(`¿Cómo se llama "${fallback}"?`, current);
+      const name = prompt(`¿Cómo se llama "${fallback}"?`, names[label] || "");
       if (name === null) return;
-      const trimmed = name.trim();
-      if (trimmed) names[label] = trimmed; else delete names[label];
-      saveNames();
-      renderSpeakerChips();
-      refreshRenderedNames(label);
+      const t = name.trim();
+      if (t) names[label] = t; else delete names[label];
+      saveNames(); renderSpeakerChips(); refreshRenderedNames(label);
     };
     speakersEl.appendChild(chip);
   });
 }
-
-function friendly(label) {
-  if (!label || label === "?" ) return "Identificando…";
-  const up = label.toUpperCase();
-  if (up.length === 1 && up >= "A" && up <= "Z") return "Persona " + (up.charCodeAt(0) - 64);
-  return "Persona " + label;
-}
-
 function refreshRenderedNames(label) {
   document.querySelectorAll(`[data-label="${label}"] .who`).forEach(el => {
     el.textContent = displayName(label, friendly(label));
   });
 }
-
 function trackSpeaker(label) {
-  if (label && label !== "?" && !seenSpeakers.has(label)) {
-    seenSpeakers.add(label);
-    renderSpeakerChips();
+  if (label && label !== "?" && !seenSpeakers.has(label)) { seenSpeakers.add(label); renderSpeakerChips(); }
+}
+function setActiveSpeakers(labels) {
+  document.querySelectorAll(".chip.speaking").forEach(c => c.classList.remove("speaking"));
+  labels.forEach(l => { const c = speakersEl.querySelector(`[data-chip="${l}"]`); if (c) c.classList.add("speaking"); });
+}
+
+// ── Render por TURNO (upsert + corrección de hablante en vivo) ──
+function turnKey(turnOrder, isPartial) {
+  if (turnOrder !== null && turnOrder !== undefined) return "t" + turnOrder;
+  return isPartial ? "__live__" : null;
+}
+function renderTurn(turnOrder, segments, isPartial) {
+  if (!segments || !segments.length) return;
+  emptyEl.style.display = "none";
+  let key = turnKey(turnOrder, isPartial);
+  if (key === null) {
+    if (turnStore["__live__"]) { key = "final" + (liveCounter++); turnStore[key] = turnStore["__live__"]; delete turnStore["__live__"]; }
+    else key = "final" + (liveCounter++);
   }
-}
-
-function addFinalTurn(label, text) {
-  if (!text) return;
-  emptyEl.style.display = "none";
-  trackSpeaker(label);
-  const fallback = friendly(label);
-  const turn = document.createElement("div");
-  turn.className = "turn";
-  turn.dataset.label = label || "?";
-  turn.innerHTML = `
-    <div class="avatar" style="background:${colorFor(label)}">${initials(displayName(label, fallback))}</div>
-    <div class="bubble">
-      <div class="who" style="color:${colorFor(label)}">${displayName(label, fallback)}</div>
-      <div class="txt"></div>
-    </div>`;
-  turn.querySelector(".txt").textContent = text;
-  transcriptEl.appendChild(turn);
-  transcriptEl.scrollTop = transcriptEl.scrollHeight;
-}
-
-function updatePartial(label, text) {
-  if (!text) return;
-  emptyEl.style.display = "none";
-  trackSpeaker(label);
-  const key = label || "?";
-  const fallback = friendly(label);
-  let turn = partials[key];
-  if (!turn) {
-    turn = document.createElement("div");
-    turn.className = "turn partial";
-    turn.dataset.label = key;
-    turn.innerHTML = `
+  let entry = turnStore[key];
+  if (!entry) {
+    const el = document.createElement("div");
+    el.className = "turn-group";
+    transcriptEl.appendChild(el);
+    entry = turnStore[key] = { el };
+  }
+  entry.el.innerHTML = "";
+  segments.forEach(seg => {
+    const label = seg.speaker_label || "?";
+    trackSpeaker(label);
+    const fallback = friendly(label);
+    const row = document.createElement("div");
+    row.className = "turn" + (isPartial ? " partial" : "");
+    row.dataset.label = label;
+    row.innerHTML = `
       <div class="avatar" style="background:${colorFor(label)}">${initials(displayName(label, fallback))}</div>
       <div class="bubble">
         <div class="who" style="color:${colorFor(label)}">${displayName(label, fallback)}</div>
         <div class="txt"></div>
       </div>`;
-    partials[key] = turn;
-    transcriptEl.appendChild(turn);
-  }
-  turn.querySelector(".txt").textContent = text;
+    row.querySelector(".txt").textContent = seg.text;
+    entry.el.appendChild(row);
+  });
+  if (isPartial) setActiveSpeakers(segments.map(s => s.speaker_label).filter(Boolean));
   transcriptEl.scrollTop = transcriptEl.scrollHeight;
 }
-
-function clearPartial(label) {
-  const key = label || "?";
-  const turn = partials[key];
-  if (turn) { turn.remove(); delete partials[key]; }
+function settleTurns() {
+  if (turnStore["__live__"]) { const k = "final" + (liveCounter++); turnStore[k] = turnStore["__live__"]; delete turnStore["__live__"]; }
+  document.querySelectorAll(".turn.partial").forEach(e => e.classList.remove("partial"));
+  setActiveSpeakers([]);
 }
-function clearAllPartials() {
-  Object.keys(partials).forEach(k => { partials[k].remove(); delete partials[k]; });
+
+// ── Diagrama de voz: onda + espectrograma ──
+function heat(v) {
+  v = Math.max(0, Math.min(1, v));
+  const stops = [[10,15,40],[30,80,160],[30,180,140],[220,200,60],[240,80,60]];
+  const t = v * (stops.length - 1), i = Math.floor(t), f = t - i;
+  const a = stops[i], b = stops[Math.min(i + 1, stops.length - 1)];
+  return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`;
+}
+function drawWave(buf) {
+  const w = waveCanvas.width, h = waveCanvas.height;
+  waveCtx.fillStyle = "#0a0f1f"; waveCtx.fillRect(0, 0, w, h);
+  waveCtx.strokeStyle = "#22d3a6"; waveCtx.lineWidth = 1.5; waveCtx.beginPath();
+  const step = Math.max(1, Math.floor(buf.length / w));
+  for (let x = 0; x < w; x++) {
+    const s = buf[x * step] || 0;
+    const y = h / 2 - s * h * 0.45;
+    if (x === 0) waveCtx.moveTo(x, y); else waveCtx.lineTo(x, y);
+  }
+  waveCtx.stroke();
+}
+function drawSpecColumn(mel) {
+  const w = specCanvas.width, h = specCanvas.height, colW = 4;
+  const img = specCtx.getImageData(colW, 0, w - colW, h);
+  specCtx.putImageData(img, 0, 0);
+  const n = mel.length;
+  for (let i = 0; i < n; i++) {
+    const y0 = h - Math.round((i + 1) / n * h);
+    const y1 = h - Math.round(i / n * h);
+    specCtx.fillStyle = heat(mel[i]);
+    specCtx.fillRect(w - colW, y0, colW, Math.max(1, y1 - y0));
+  }
+}
+function clearViz() {
+  specCtx.fillStyle = "#0a0f1f"; specCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
+  waveCtx.fillStyle = "#0a0f1f"; waveCtx.fillRect(0, 0, waveCanvas.width, waveCanvas.height);
+}
+
+// ── Clasificación de voz (huella acústica calculada en Python) ──
+const VOICE_COLORS = ["#4f8cff","#22d3a6","#ffbf47","#ff6b6b","#c084fc","#38bdf8","#f472b6","#a3e635"];
+function voiceColor(id) { return VOICE_COLORS[id % VOICE_COLORS.length]; }
+const voiceNames = JSON.parse(localStorage.getItem("sonaria_voice_names") || "{}");
+function saveVoiceNames() { localStorage.setItem("sonaria_voice_names", JSON.stringify(voiceNames)); }
+function voiceDisplayName(id) { return voiceNames[id] || ("Voz " + (id + 1)); }
+const voicesMap = {}; // id -> count
+function renderVoicesList(activeId) {
+  voicesList.innerHTML = "";
+  Object.keys(voicesMap).map(Number).sort((a, b) => a - b).forEach(id => {
+    const el = document.createElement("div");
+    el.className = "voice-item" + (id === activeId ? " active" : "");
+    el.innerHTML = `<span class="swatch" style="background:${voiceColor(id)}"></span>
+      <span class="vi-name">${voiceDisplayName(id)}</span><small>✎</small>`;
+    el.onclick = () => {
+      const n = prompt("Nombre para " + voiceDisplayName(id) + ":", voiceNames[id] || "");
+      if (n === null) return;
+      const t = n.trim(); if (t) voiceNames[id] = t; else delete voiceNames[id];
+      saveVoiceNames(); renderVoicesList(activeId);
+    };
+    voicesList.appendChild(el);
+  });
+}
+function updateClassification(msg) {
+  if (msg.voice_id === null || msg.voice_id === undefined || !msg.is_speech) return;
+  const id = msg.voice_id;
+  voicesMap[id] = (voicesMap[id] || 0) + 1;
+  vcAvatar.textContent = initials(voiceDisplayName(id));
+  vcAvatar.style.background = voiceColor(id);
+  vcName.textContent = voiceDisplayName(id);
+  vcSub.textContent = msg.is_new_voice ? "🆕 Nueva voz detectada" : "Voz reconocida por su huella";
+  const conf = Math.round((msg.confidence || 0) * 100);
+  vcConf.style.width = conf + "%";
+  vcConfTxt.textContent = conf + "%";
+  vcPitch.textContent = (msg.pitch_hz ? Math.round(msg.pitch_hz) : "—") + " Hz";
+  vcBright.textContent = (msg.centroid_hz ? Math.round(msg.centroid_hz) : "—") + " Hz";
+  renderVoicesList(id);
 }
 
 // ── Audio + WebSocket ──
@@ -324,21 +403,15 @@ let ws = null, audioCtx = null, source = null, processor = null, stream = null;
 async function getToken() {
   const res = await fetch("/auth/dev-token", { method: "POST" });
   if (!res.ok) throw new Error("No se pudo obtener token (" + res.status + ")");
-  const data = await res.json();
-  return data.access_token;
+  return (await res.json()).access_token;
 }
-
 function floatTo16kPCM(input, inRate) {
-  const outRate = 16000;
-  const ratio = inRate / outRate;
+  const ratio = inRate / 16000;
   const outLen = Math.floor(input.length / ratio);
   const out = new Int16Array(outLen);
   for (let i = 0; i < outLen; i++) {
-    const idx = i * ratio;
-    const i0 = Math.floor(idx);
-    const i1 = Math.min(i0 + 1, input.length - 1);
-    const frac = idx - i0;
-    let s = input[i0] * (1 - frac) + input[i1] * frac;
+    const idx = i * ratio, i0 = Math.floor(idx), i1 = Math.min(i0 + 1, input.length - 1);
+    let s = input[i0] * (1 - (idx - i0)) + input[i1] * (idx - i0);
     s = Math.max(-1, Math.min(1, s));
     out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
   }
@@ -349,16 +422,16 @@ async function start() {
   hideError();
   startBtn.disabled = true;
   setStatus("Conectando…");
+  clearViz();
   try {
     const token = await getToken();
     stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
     });
-
     const maxSpeakers = Math.max(1, Math.min(10, parseInt(maxSpeakersInput.value || "2", 10)));
     const clean = document.getElementById("cleanChk").checked ? "true" : "false";
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    const url = `${proto}://${location.host}/ws/audio?token=${encodeURIComponent(token)}&max_speakers=${maxSpeakers}&sample_rate=16000&clean=${clean}`;
+    const url = `${proto}://${location.host}/ws/audio?token=${encodeURIComponent(token)}&max_speakers=${maxSpeakers}&sample_rate=16000&clean=${clean}&analyze=true`;
     ws = new WebSocket(url);
     ws.binaryType = "arraybuffer";
 
@@ -370,44 +443,31 @@ async function start() {
       processor.connect(audioCtx.destination);
       processor.onaudioprocess = (e) => {
         const input = e.inputBuffer.getChannelData(0);
-        // medidor de nivel
         let sum = 0;
         for (let i = 0; i < input.length; i++) sum += input[i] * input[i];
-        const rms = Math.sqrt(sum / input.length);
-        levelEl.style.width = Math.min(100, rms * 300) + "%";
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          const pcm = floatTo16kPCM(input, audioCtx.sampleRate);
-          ws.send(pcm.buffer);
-        }
+        levelEl.style.width = Math.min(100, Math.sqrt(sum / input.length) * 300) + "%";
+        drawWave(input);
+        if (ws && ws.readyState === WebSocket.OPEN) ws.send(floatTo16kPCM(input, audioCtx.sampleRate).buffer);
       };
       setStatus("Escuchando", "live");
       stopBtn.disabled = false;
     };
 
     ws.onmessage = (evt) => {
-      let msg;
-      try { msg = JSON.parse(evt.data); } catch { return; }
+      let msg; try { msg = JSON.parse(evt.data); } catch { return; }
       switch (msg.type) {
-        case "connected":
-          setStatus("Escuchando", "live");
-          break;
-        case "partial":
-          updatePartial(msg.speaker_label, msg.text);
-          break;
-        case "final":
-          clearPartial(msg.speaker_label);
-          addFinalTurn(msg.speaker_label, msg.text);
-          break;
+        case "connected": setStatus("Escuchando", "live"); break;
+        case "partial": renderTurn(msg.turn_order, msg.segments, true); break;
+        case "final": renderTurn(msg.turn_order, msg.segments, false); break;
         case "revision":
-          // El modelo corrigió a quién pertenecía un turno.
-          if (msg.segments && msg.segments.length) {
-            msg.segments.forEach(s => trackSpeaker(s.speaker_label));
-          }
+          if (msg.turn_order != null && turnStore["t" + msg.turn_order]) renderTurn(msg.turn_order, msg.segments, false);
+          else if (msg.segments) msg.segments.forEach(s => trackSpeaker(s.speaker_label));
           break;
-        case "error":
-          showError(msg.text || "Error del servidor");
-          setStatus("Error", "err");
+        case "voice_analysis":
+          if (msg.mel) drawSpecColumn(msg.mel);
+          updateClassification(msg);
           break;
+        case "error": showError(msg.text || "Error del servidor"); setStatus("Error", "err"); break;
       }
     };
 
@@ -426,7 +486,7 @@ function stop() {
   try { if (audioCtx) audioCtx.close(); } catch {}
   try { if (stream) stream.getTracks().forEach(t => t.stop()); } catch {}
   try { if (ws && ws.readyState <= 1) ws.close(); } catch {}
-  clearAllPartials();
+  settleTurns();
   ws = null; audioCtx = null; source = null; processor = null; stream = null;
   levelEl.style.width = "0%";
   setStatus("Desconectado");
@@ -437,6 +497,7 @@ function stop() {
 startBtn.onclick = start;
 stopBtn.onclick = stop;
 window.addEventListener("beforeunload", stop);
+clearViz();
 </script>
 </body>
 </html>
