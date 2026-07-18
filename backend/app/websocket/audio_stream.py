@@ -213,7 +213,8 @@ async def audio_stream(
     logger.info(
         "Nueva conexión WebSocket /ws/audio | max_speakers=%d | sample_rate=%d",
         max_speakers, sample_rate,
-    
+    )
+
     # Inicializar biometría en el primer request si no se ha hecho
     if not voice_biometrics.is_ready:
         voice_biometrics.initialize()
