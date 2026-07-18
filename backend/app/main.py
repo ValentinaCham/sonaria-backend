@@ -37,8 +37,10 @@ app.include_router(sound_stream.router)
 
 
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+app.mount("/test", StaticFiles(directory="app/static", html=True), name="test")
 
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+

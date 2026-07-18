@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Diarización AssemblyAI</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; max-width: 800px; margin: auto; background-color: #f9fafb; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; }
+        button { padding: 10px 20px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; color: white; font-weight: bold; }
+        #btn-start { background-color: #10b981; }
+        #btn-start:disabled { background-color: #a7f3d0; cursor: not-allowed; }
+        #btn-stop { background-color: #ef4444; }
+        #btn-stop:disabled { background-color: #fca5a5; cursor: not-allowed; }
+        
+        #transcript { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            min-height: 400px; 
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Colores para las personas */
+        .speaker-A { border-left: 5px solid #2563eb; color: #1e3a8a; background: #eff6ff !important; }
+        .speaker-B { border-left: 5px solid #16a34a; color: #14532d; background: #f0fdf4 !important; }
+        .speaker-C { border-left: 5px solid #d97706; color: #78350f; background: #fffbeb !important; }
+        .speaker-D { border-left: 5px solid #9333ea; color: #581c87; background: #faf5ff !important; }
+        .speaker-UNKNOWN { border-left: 5px solid #6b7280; color: #374151; font-style: italic; }
+        
+        .bubble { 
+            padding: 12px 16px; 
+            border-radius: 8px; 
+            background: #f3f4f6; 
+            transition: all 0.3s ease;
+            width: 80%;
+            align-self: flex-start;
+        }
+
+        /* Lógica para diferenciar tamaños (prioridad) */
+        .bubble.active {
+            font-size: 1.25em;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            opacity: 1;
+        }
+
+        .bubble.inactive {
+            font-size: 0.85em;
+            opacity: 0.6;
+        }
+        
+        .bubble strong { display: block; font-size: 0.75em; margin-bottom: 4px; text-transform: uppercase; opacity: 0.8; }
+        
+        #status { font-size: 14px; margin-bottom: 15px; color: #6b7280; }
+        #speaker-count { font-weight: bold; color: #111827; }
+    </style>
+</head>
+<body>
+
+    <h1>🎙️ Prueba en Vivo - Separación de Voces</h1>
+    <div id="status">Estado: Desconectado</div>
+    <div id="status">Personas detectadas: <span id="speaker-count">0</span></div>
+    
+    <div class="controls">
+        <button id="btn-start">Iniciar Micrófono</button>
+        <button id="btn-stop" disabled>Detener</button>
+    </div>
+
+    <div id="transcript"></div>
+
+    <script>
+        let ws;
+        let audioContext;
+        let scriptProcessor;
+        let audioInput;
+        let stream;
+        
+        const btnStart = document.getElementById('btn-start');
+        const btnStop = document.getElementById('btn-stop');
+        const transcriptDiv = document.getElementById('transcript');
+        const statusDiv = document.getElementById('status');
+        const speakerCountSpan = document.getElementById('speaker-count');
+
+        let knownSpeakers = new Set();
+        let lastSpeaker = null;
+
+        function addOrUpdateBubble(speaker, text, isFinal) {
+            // Actualizar conteo de personas
+            if (speaker !== 'UNKNOWN' && !knownSpeakers.has(speaker)) {
+                knownSpeakers.add(speaker);
+                speakerCountSpan.textContent = knownSpeakers.size;
+            }
+
+            let bubbleId = 'bubble-' + speaker;
+            let bubble = document.getElementById(bubbleId);
+            
+            if (!bubble) {
+                bubble = document.createElement('div');
+                bubble.id = bubbleId;
+                bubble.className = 'bubble speaker-' + speaker;
+                
+                let speakerName = speaker === 'UNKNOWN' ? 'Identificando...' : 'Persona ' + speaker;
+                bubble.innerHTML = `<strong>${speakerName}</strong><span class="text"></span>`;
+                transcriptDiv.appendChild(bubble);
+            }
+            
+            bubble.querySelector('.text').textContent = text;
+            
+            // Lógica de Prioridad: El que acaba de hablar se hace grande, los demás se hacen pequeños
+            if (speaker !== lastSpeaker && speaker !== 'UNKNOWN') {
+                // Marcar todos como inactivos
+                document.querySelectorAll('.bubble').forEach(b => {
+                    b.classList.remove('active');
+                    b.classList.add('inactive');
+                });
+                
+                // Marcar el actual como activo
+                bubble.classList.remove('inactive');
+                bubble.classList.add('active');
+                lastSpeaker = speaker;
+            } else if (speaker === lastSpeaker) {
+                 bubble.classList.remove('inactive');
+                 bubble.classList.add('active');
+            }
+            
+            // Si es el final de la frase, le quitamos el ID para que el próximo turno de esta persona cree una burbuja nueva
+            if (isFinal) {
+                bubble.removeAttribute('id');
+                // No cambiamos el 'lastSpeaker' para que si vuelve a hablar, siga siendo el grande.
+            }
+            
+            // Auto-scroll
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        btnStart.onclick = async () => {
+            try {
+                // Configurar WebSocket
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/audio`;
+                
+                ws = new WebSocket(wsUrl);
+                
+                ws.onopen = () => {
+                    statusDiv.textContent = 'Estado: Conectado. Procesando audio...';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    if (data.text) {
+                        addOrUpdateBubble(data.speaker, data.text, data.is_final);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    statusDiv.textContent = 'Estado: Error de conexión';
+                };
+
+                // Configurar Micrófono
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Forzar 16kHz
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                audioInput = audioContext.createMediaStreamSource(stream);
+                
+                scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+                
+                scriptProcessor.onaudioprocess = (e) => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        const inputData = e.inputBuffer.getChannelData(0);
+                        // Convertir Float32 (-1 a 1) a Int16 (-32768 a 32767)
+                        const pcm16 = new Int16Array(inputData.length);
+                        for (let i = 0; i < inputData.length; i++) {
+                            pcm16[i] = Math.max(-1, Math.min(1, inputData[i])) * 32767;
+                        }
+                        ws.send(pcm16.buffer);
+                    }
+                };
+                
+                audioInput.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+                
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo acceder al micrófono.\n\nNOTA: En móviles, si accedes por IP, Chrome y Safari bloquean el micrófono por seguridad (requieren HTTPS). Debes usar localhost, ngrok, o habilitar orígenes inseguros en chrome://flags.\n\nDetalle: ' + err.message);
+                statusDiv.textContent = 'Estado: Error de micrófono';
+            }
+        };
+
+        btnStop.onclick = () => {
+            if (scriptProcessor) {
+                scriptProcessor.disconnect();
+                audioInput.disconnect();
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            if (ws) {
+                ws.close();
+            }
+            
+            btnStart.disabled = false;
+            btnStop.disabled = true;
+            statusDiv.textContent = 'Estado: Desconectado';
+        };
+    </script>
+</body>
+</html>
