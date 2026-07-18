@@ -54,7 +54,7 @@ def start_assemblyai_client(websocket: WebSocket, loop: asyncio.AbstractEventLoo
     print("Iniciando cliente de AssemblyAI...")
     client = StreamingClient(StreamingClientOptions(api_key=settings.ASSEMBLYAI_API_KEY))
     
-    # Diccionario para mapear temporalmente A, B, C a "Dueña"
+    # Diccionario para mapear temporalmente A, B, C a "me"
     speaker_mapping = {}
     
     def on_begin(c: StreamingClient, event: BeginEvent):
@@ -76,7 +76,7 @@ def start_assemblyai_client(websocket: WebSocket, loop: asyncio.AbstractEventLoo
                 speaker = spk if spk else "UNKNOWN"
                 
                 # Biometría en vivo: Si no sabemos quién es este speaker, analizamos su audio
-                if speaker not in ["UNKNOWN", "Dueña"] and speaker not in speaker_mapping:
+                if speaker not in ["UNKNOWN", "me"] and speaker not in speaker_mapping:
                     # Extraer audio del buffer (1 ms = 32 bytes, a 16kHz, 16 bits mono)
                     start_byte = seg["start"] * 32
                     end_byte = seg["end"] * 32
@@ -86,8 +86,8 @@ def start_assemblyai_client(websocket: WebSocket, loop: asyncio.AbstractEventLoo
                     if len(audio_chunk) > 32000:
                         is_owner = voice_biometrics.verify_speaker(audio_chunk)
                         if is_owner:
-                            speaker_mapping[speaker] = "Dueña"
-                            print(f"🎉 ¡Hablante {speaker} identificado como Dueña!")
+                            speaker_mapping[speaker] = "me"
+                            print(f"🎉 ¡Hablante {speaker} identificado como 'me'!")
                         else:
                             # Lo marcamos para no volver a analizarlo pronto (o podríamos seguir reintentando)
                             speaker_mapping[speaker] = speaker
