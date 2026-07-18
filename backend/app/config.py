@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str = ""
     ASSEMBLYAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    OWNER_VOICE_BUCKET: str = "voices"
+    OWNER_VOICE_PATH: str = "duena.wav"
     JWT_SECRET: str = "default-secret-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440

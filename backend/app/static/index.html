@@ -148,6 +148,7 @@
         </div>
       </div>
 
+<<<<<<< HEAD
       <p class="hint">Consejo: indica el numero real de personas antes de empezar y hablen por turnos al inicio. Toca "Persona 1/2..." para reconocerla con su nombre (se recuerda).</p>
     </section>
 
@@ -159,6 +160,84 @@
         <div class="viz-label">Espectrograma - analisis Python (MEL)</div>
         <canvas id="spec" width="360" height="130"></canvas>
       </div>
+=======
+        function createOrGetBubble(bubbleId, speaker) {
+            let bubble = document.getElementById(bubbleId);
+            if (!bubble) {
+                bubble = document.createElement('div');
+                bubble.id = bubbleId;
+                bubble.className = 'bubble speaker-' + speaker;
+                
+                let speakerName;
+                if (speaker === 'me') speakerName = '🎙️ Yo';
+                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
+                else speakerName = 'Persona ' + speaker;
+                
+                bubble.innerHTML = `<strong><span class="name">${speakerName}</span><span class="revised-badge">(Corregido por IA)</span></strong><span class="text"></span>`;
+                transcriptDiv.appendChild(bubble);
+            }
+            return bubble;
+        }
+
+        function updateBubble(turnOrder, speaker, text, isFinal, isRevision) {
+            updateSpeakerCount(speaker);
+            
+            // Usamos un id que mezcla si es final o no. Si no es final, actualizamos la misma burbuja temporal
+            const bubbleId = isFinal ? `bubble-final-${turnOrder}` : 'bubble-partial';
+            
+            let bubble = createOrGetBubble(bubbleId, speaker);
+            
+            // Si es parcial, actualizamos el speaker dinámicamente si cambia
+            if (!isFinal) {
+                bubble.className = 'bubble active speaker-' + speaker;
+                let speakerName;
+                if (speaker === 'me') speakerName = '🎙️ Yo';
+                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
+                else speakerName = 'Persona ' + speaker;
+                bubble.querySelector('.name').textContent = speakerName;
+            }
+            
+            bubble.querySelector('.text').textContent = text;
+            
+            if (isRevision) {
+                // Si la IA corrigió este turno en el pasado
+                bubble.className = 'bubble inactive speaker-' + speaker;
+                let speakerName;
+                if (speaker === 'me') speakerName = '🎙️ Yo';
+                else if (speaker === 'UNKNOWN') speakerName = 'Identificando...';
+                else speakerName = 'Persona ' + speaker;
+                bubble.querySelector('.name').textContent = speakerName;
+                bubble.querySelector('.revised-badge').style.display = 'inline';
+            } else if (!isRevision && speaker !== 'UNKNOWN') {
+                // Lógica de prioridad para lo nuevo
+                if (speaker !== lastSpeaker) {
+                    document.querySelectorAll('.bubble').forEach(b => {
+                        b.classList.remove('active');
+                        b.classList.add('inactive');
+                    });
+                    bubble.classList.remove('inactive');
+                    bubble.classList.add('active');
+                    lastSpeaker = speaker;
+                } else if (speaker === lastSpeaker) {
+                     bubble.classList.remove('inactive');
+                     bubble.classList.add('active');
+                }
+            }
+            
+            if (isFinal && !isRevision) {
+                // Limpiar la burbuja parcial si se acaba de consolidar un final
+                let partialBubble = document.getElementById('bubble-partial');
+                if (partialBubble) {
+                    partialBubble.querySelector('.text').textContent = '';
+                    partialBubble.style.display = 'none';
+                }
+            } else if (!isFinal) {
+                bubble.style.display = 'block';
+            }
+            
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+>>>>>>> ebeed1b839bf8b3f5b844d0f391eda250cde9205
 
       <div class="panel-card">
         <h2>Clasificacion de voz</h2>
