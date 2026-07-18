@@ -87,6 +87,18 @@
   .bubble .who { font-weight: 800; font-size: 15px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
   .bubble .txt { font-size: 21px; line-height: 1.4; }
   .turn.partial .bubble { border-style: dashed; opacity: .9; }
+  /* Globo del dueño de la aplicacion (identificado por biometria) */
+  .bubble.speaker-me {
+    margin-left: auto;
+    border-left: none;
+    border-right: 4px solid #e11d48;
+    background: linear-gradient(135deg, #fff1f2, #fce7f3);
+    color: #881337;
+    box-shadow: 0 2px 8px rgba(225,29,72,0.15);
+    max-width: 85%;
+  }
+  .bubble.speaker-me .who,
+  .bubble.speaker-me .txt { color: #881337; text-align: right; }
   .turn.partial .txt::after { content: "|"; animation: blink 1s steps(1) infinite; color: var(--muted); }
   @keyframes blink { 50% { opacity: 0; } }
 
@@ -167,7 +179,6 @@
           Verás en vivo quién habla y qué dice. Toca a una persona para ponerle su nombre real.
         </div>
       </div>
-
       <p class="hint">Consejo: indica el número real de personas antes de empezar y hablen por turnos al inicio. Toca "Persona 1/2…" para reconocerla con su nombre (se recuerda en este navegador).</p>
     </section>
 
@@ -179,7 +190,6 @@
         <div class="viz-label">Espectrograma · análisis Python (MEL)</div>
         <canvas id="spec" width="360" height="130" role="img" aria-label="Espectrograma de la voz calculado en el servidor"></canvas>
       </div>
-
       <div class="panel-card" aria-live="polite">
         <h2>Clasificación de voz</h2>
         <div class="vc-head">
