@@ -1,0 +1,20 @@
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Supabase (archivos temporales y de estado local)
+supabase/.temp/
+supabase/.branch
+
+# Node.js (Por si agregas dependencias en Edge Functions más adelante)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Archivos del sistema operativo (Mac/Windows)
+.DS_Store
+Thumbs.db
