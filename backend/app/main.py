@@ -11,6 +11,8 @@ from app.config import settings
 from app.routers import auth, conversations, events, sounds, upload, voices, enrollment
 from app.websocket import audio_stream, sound_stream
 
+STATIC_DIR = Path(__file__).parent / "static"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +44,18 @@ app.include_router(sound_stream.router)
 
 
 app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
+
+# ── Frontend de prueba (SONARIA Web Demo) ────────────────────────
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def frontend_index():
+        index = STATIC_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index))
+        return {"status": "ok", "message": "SONARIA backend running"}
 
 
 @app.get("/health")
