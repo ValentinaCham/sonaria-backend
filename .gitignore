@@ -21,3 +21,6 @@ Thumbs.db
 
 # Uploads de audio
 backend/uploads/
+
+
+*.env.*.local
