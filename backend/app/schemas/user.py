@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, EmailStr
 
 
@@ -17,17 +19,7 @@ class TokenResponse(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     email: str
 
     model_config = {"from_attributes": True}
-
-    @classmethod
-    def model_validate(cls, obj, *args, **kwargs):
-        # Convertir UUID a str para serialización JSON
-        if hasattr(obj, "id") and not isinstance(obj.id, str):
-            obj = type(obj)(
-                id=str(obj.id),
-                email=obj.email,
-            )
-        return super().model_validate(obj, *args, **kwargs)
