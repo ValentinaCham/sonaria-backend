@@ -68,6 +68,17 @@ docker compose up --build
 
 El backend queda disponible en `http://localhost:8000` (docs en `http://localhost:8000/docs`).
 
+### Prototipo de diarización (`modeloSONARIA/streaming_assemblyai.py`)
+
+Script standalone que prueba la transcripción + diarización en vivo con **AssemblyAI Streaming v3** (separar hablantes desde un solo micrófono). Requiere la variable de entorno `ASSEMBLYAI_API_KEY`:
+
+```bash
+export ASSEMBLYAI_API_KEY="tu-api-key"   # o defínela en tu .env y cárgala antes de ejecutar
+python modeloSONARIA/streaming_assemblyai.py
+```
+
+La API key **nunca** debe commitearse en un archivo del repo — el script solo la lee desde esta variable de entorno.
+
 ## Estado
 
 Prototipo funcional en desarrollo activo (MVP del hackathon): autenticación, conversaciones y sonidos implementados; resúmenes con Gemini y biometría de voz (torch/speechbrain) en roadmap.
