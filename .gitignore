@@ -24,3 +24,7 @@ backend/uploads/
 
 
 *.env.*.local
+
+# API keys en texto plano (usar variables de entorno, nunca commitear esto)
+modeloSONARIA/*key*.txt
+modeloSONARIA/apai*.txt
