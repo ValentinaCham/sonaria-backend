@@ -77,22 +77,19 @@ CLEAR_LINE = "\r\033[K"   # vuelve al inicio de línea y la borra
 # ══════════════════════════════════════════════════════════════
 
 def load_api_key():
-    """Busca la API key en ASSEMBLYAI_API_KEY (entorno) o en un archivo local."""
+    """Lee la API key exclusivamente de la variable de entorno
+    ASSEMBLYAI_API_KEY (usa un archivo .env + python-dotenv, o
+    expórtala en tu shell). Nunca la guardes en un archivo dentro
+    del repo: este proyecto NO debe traer claves en texto plano."""
     api_key = os.environ.get("ASSEMBLYAI_API_KEY")
-    if api_key:
+    if api_key and api_key.strip():
         return api_key.strip()
 
-    for name in ("assemblyai_key.txt", "apai.txt"):
-        api_file = Path(__file__).parent / name
-        if api_file.exists():
-            api_key = api_file.read_text(encoding="utf-8").strip()
-            if api_key:
-                return api_key
-
     raise ValueError(
-        "No se encontró la API Key de AssemblyAI. "
-        "Usa la variable de entorno ASSEMBLYAI_API_KEY "
-        "o crea un archivo assemblyai_key.txt con la clave."
+        "No se encontró ASSEMBLYAI_API_KEY. Define esta variable de "
+        "entorno antes de ejecutar el script, por ejemplo copiando "
+        "backend/.env.example a .env y cargándolo con "
+        "`export $(cat .env | xargs)` o con python-dotenv."
     )
 
 
